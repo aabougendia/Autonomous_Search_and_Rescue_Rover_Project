@@ -27,6 +27,7 @@
 
 #include "servo.h"
 #include "GPS_Module.h"
+#include "PIR_sensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -112,11 +113,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  /*****************  GPIO test    *****************************/
 //	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 //	  HAL_Delay(200);
 //	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 //	  HAL_Delay(200);
 
+
+	  /********************  servo test   **********************/
 //	  Servo_SetAngle(0);
 //	  HAL_Delay(1000);
 //	  Servo_SetAngle(90);
@@ -126,12 +130,22 @@ int main(void)
 //	  Servo_SetAngle(90);
 //	  HAL_Delay(1000);
 
-	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
 
-	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
+	  /*****************    GPS test   ***********************/
+//	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
+//
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
 
 
+	  /*****************    PIR test  ********************/
+	  if(PIR_Read() == PIR_MOTION_DETECTED){
+		  HAL_UART_Transmit(&huart2, (uint8_t*)"Motion Detected\r\n", strlen("Motion Detected\r\n"), HAL_MAX_DELAY);
+	  }
+	  else {
+		  HAL_UART_Transmit(&huart2, (uint8_t*)"No Motion\r\n", strlen("No Motion\r\n"), HAL_MAX_DELAY);
+	  }
+	  HAL_Delay(200);
 
 
     /* USER CODE END WHILE */
@@ -332,6 +346,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PIR_SENSOR_Pin */
+  GPIO_InitStruct.Pin = PIR_SENSOR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PIR_SENSOR_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
