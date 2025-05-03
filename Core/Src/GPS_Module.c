@@ -63,7 +63,7 @@ char* GPS_getLocation(){
 
 	  if((flagGGA == 2) | (flagRMC == 2)){
 
-		  sprintf(locationBuffer, "%.6f%c, %.6f%c  ", gpsData.ggastruct.lcation.latitude, gpsData.ggastruct.lcation.NS,
+		  sprintf(locationBuffer, "%.8f%c, %.8f%c", gpsData.ggastruct.lcation.latitude, gpsData.ggastruct.lcation.NS,
 				  gpsData.ggastruct.lcation.longitude, gpsData.ggastruct.lcation.EW);
 	  }
 
@@ -123,7 +123,7 @@ char* GPS_getGoogleMapsLink(){
 		  if (gpsData.ggastruct.lcation.EW == 'W') longitude = -longitude;
 
 		  memset(mapsBuffer, 0, sizeof(mapsBuffer));
-		  sprintf(mapsBuffer, "https://www.google.com/maps?q=%.6f,%.6f", latitude, longitude);
+		  sprintf(mapsBuffer, "https://www.google.com/maps?q=%.8f,%.8f", latitude, longitude);
 
 	  }
 
