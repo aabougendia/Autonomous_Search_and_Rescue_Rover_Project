@@ -1,10 +1,9 @@
-/*
- * Ultrasonic_program.c
- *
- *  Created on: May 11, 2025
- *      Author: rouka
- */
 
+#include "std_types.h"
+#include "main.h"
+#include "ultrasonic.h"
+
+extern TIM_HandleTypeDef htim1;
 
 volatile uint32_t IC_Val1 = 0;
 volatile uint32_t IC_Val2 = 0;

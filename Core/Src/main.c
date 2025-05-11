@@ -28,6 +28,7 @@
 #include "servo.h"
 #include "GPS_Module.h"
 #include "PIR_sensor.h"
+#include "ultrasonic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

@@ -1,12 +1,6 @@
-/*
- * HALERTS_interface.h
- *
- *  Created on: May 7, 2025
- *      Author: rouka
- */
 
-#ifndef INC_HALERTS_INTERFACE_H_
-#define INC_HALERTS_INTERFACE_H_
+#ifndef INC_ALERTS_H_
+#define INC_ALERTS_H_
 
 
 #define LED_ON	GPIO_PIN_SET
@@ -23,4 +17,4 @@ void RGB_LED_vBlink(u8 R_State, u8 G_State, u8 B_State, u32 delay);
 
 
 
-#endif /* INC_HALERTS_INTERFACE_H_ */
+#endif /* INC_ALERTS_H_ */
