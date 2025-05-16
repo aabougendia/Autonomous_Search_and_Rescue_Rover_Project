@@ -1,8 +1,8 @@
-#include <stdint.h>
-//#include "stm32f10x.h"  // or your specific device header
+//#include <stdint.h>
+//#include "main.h"
 
-//void setServoPulse(uint16_t pulse_width_us);
-//void controlContinuousServo(ServoDirection direction);
-//void servo_setangle(uint8_t angle);
+#define SERVO_TIMER &htim2
+#define SERVO_TIMER_PWM_CH TIM_CHANNEL_2
+
 void Servo_Init();
 void Servo_SetAngle(uint8_t angle);

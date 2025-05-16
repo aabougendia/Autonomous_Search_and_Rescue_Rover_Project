@@ -59,22 +59,46 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SERVO_PWM_Pin GPIO_PIN_1
+#define SERVO_PWM_GPIO_Port GPIOA
+#define SERIAL_TX_Pin GPIO_PIN_2
+#define SERIAL_TX_GPIO_Port GPIOA
+#define SERIAL_RX_Pin GPIO_PIN_3
+#define SERIAL_RX_GPIO_Port GPIOA
+#define MOTOR_DIR1_Pin GPIO_PIN_4
+#define MOTOR_DIR1_GPIO_Port GPIOA
+#define MOTOR_EN1_Pin GPIO_PIN_5
+#define MOTOR_EN1_GPIO_Port GPIOA
+#define MOTOR_DIR2_Pin GPIO_PIN_6
+#define MOTOR_DIR2_GPIO_Port GPIOA
+#define MOTOR_EN2_Pin GPIO_PIN_7
+#define MOTOR_EN2_GPIO_Port GPIOA
 #define PIR_SENSOR_Pin GPIO_PIN_0
-#define PIR_SENSOR_GPIO_Port GPIOA
-#define Motor_IN1_Pin GPIO_PIN_4
-#define Motor_IN1_GPIO_Port GPIOA
-#define Motor_IN2_Pin GPIO_PIN_5
-#define Motor_IN2_GPIO_Port GPIOA
-#define Motor_IN3_Pin GPIO_PIN_6
-#define Motor_IN3_GPIO_Port GPIOA
-#define Motor_IN4_Pin GPIO_PIN_7
-#define Motor_IN4_GPIO_Port GPIOA
-#define LED_R_Pin GPIO_PIN_0
-#define LED_R_GPIO_Port GPIOB
-#define LED_G_Pin GPIO_PIN_1
-#define LED_G_GPIO_Port GPIOB
-#define LED_B_Pin GPIO_PIN_2
-#define LED_B_GPIO_Port GPIOB
+#define PIR_SENSOR_GPIO_Port GPIOB
+#define COMMBUS_TX_Pin GPIO_PIN_10
+#define COMMBUS_TX_GPIO_Port GPIOB
+#define COMMBUS_RX_Pin GPIO_PIN_11
+#define COMMBUS_RX_GPIO_Port GPIOB
+#define BUZZER_Pin GPIO_PIN_15
+#define BUZZER_GPIO_Port GPIOB
+#define MOTOR_A_PWM_Pin GPIO_PIN_8
+#define MOTOR_A_PWM_GPIO_Port GPIOA
+#define MOTOR_B_PWM_Pin GPIO_PIN_9
+#define MOTOR_B_PWM_GPIO_Port GPIOA
+#define LED_B_Pin GPIO_PIN_10
+#define LED_B_GPIO_Port GPIOA
+#define LED_G_Pin GPIO_PIN_11
+#define LED_G_GPIO_Port GPIOA
+#define LED_R_Pin GPIO_PIN_12
+#define LED_R_GPIO_Port GPIOA
+#define ULTRASONIC_ECHO_Pin GPIO_PIN_4
+#define ULTRASONIC_ECHO_GPIO_Port GPIOB
+#define ULTRASONIC_TRIG_Pin GPIO_PIN_5
+#define ULTRASONIC_TRIG_GPIO_Port GPIOB
+#define GPS_TX_Pin GPIO_PIN_6
+#define GPS_TX_GPIO_Port GPIOB
+#define GPS_RX_Pin GPIO_PIN_7
+#define GPS_RX_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

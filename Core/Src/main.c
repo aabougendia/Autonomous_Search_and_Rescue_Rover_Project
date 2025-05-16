@@ -23,12 +23,18 @@
 /* USER CODE BEGIN Includes */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include "std_types.h"
+//#include "bit_math.h"
 
 #include "servo.h"
 #include "GPS_Module.h"
 #include "PIR_sensor.h"
 #include "ultrasonic.h"
+#include "motor.h"
+#include "alerts.h"
+#include "CommBus.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,9 +55,11 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 
@@ -64,6 +72,8 @@ static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -108,9 +118,14 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
+  MX_TIM3_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   Servo_Init();
   GPS_Init();
+  Ultrasonic_Init();
+  Stepper_Init();
+  CommBus_Init(&huart3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,13 +141,25 @@ int main(void)
 
 	  /********************  servo test   **********************/
 //	  Servo_SetAngle(0);
-//	  HAL_Delay(1000);
+//	  HAL_Delay(3000);
 //	  Servo_SetAngle(90);
-//	  HAL_Delay(1000);
+//	  HAL_Delay(3000);
 //	  Servo_SetAngle(180);
-//	  HAL_Delay(1000);
+//	  HAL_Delay(3000);
 //	  Servo_SetAngle(90);
-//	  HAL_Delay(1000);
+//	  HAL_Delay(3000);
+
+
+	  for (uint8_t ang = 0; ang <= 180; ang++){
+		  Servo_SetAngle(ang);
+		  HAL_Delay(10);
+	  }
+	  HAL_Delay(200);
+	  for (uint8_t ang = 179; ang > 0; ang--){
+		  Servo_SetAngle(ang);
+		  HAL_Delay(10);
+	  }
+	  HAL_Delay(200);
 
 
 	  /*****************    GPS test   ***********************/
@@ -143,14 +170,123 @@ int main(void)
 
 
 	  /*****************    PIR test  ********************/
-	  if(PIR_Read() == PIR_MOTION_DETECTED){
-		  HAL_UART_Transmit(&huart2, (uint8_t*)"Motion Detected\r\n", strlen("Motion Detected\r\n"), HAL_MAX_DELAY);
-	  }
-	  else {
-		  HAL_UART_Transmit(&huart2, (uint8_t*)"No Motion\r\n", strlen("No Motion\r\n"), HAL_MAX_DELAY);
-	  }
-	  HAL_Delay(200);
+//	  if(PIR_Read() == PIR_MOTION_DETECTED){
+//		  HAL_UART_Transmit(&huart2, (uint8_t*)"Motion Detected\r\n", strlen("Motion Detected\r\n"), HAL_MAX_DELAY);
+//	  }
+//	  else {
+//		  HAL_UART_Transmit(&huart2, (uint8_t*)"No Motion\r\n", strlen("No Motion\r\n"), HAL_MAX_DELAY);
+//	  }
+//	  HAL_Delay(200);
 
+	  /*****************   ULTRASONIC test  ********************/
+//		 Ultrasonic_Read();
+
+
+//		 uint32_t timeout = HAL_GetTick();
+//		 while (Is_First_Captured == 1) {
+//		     if (HAL_GetTick() - timeout > 50) {  // 50 ms timeout
+//		         Is_First_Captured = 0; // Reset capture
+//		         Distance = 0; // No reading
+//		         break;
+//		     }
+//		 }
+//		 char msg[50];
+//		 sprintf(msg, "Distance: %u cm\r\n", Distance);
+//		 HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+//
+//
+//		 HAL_Delay(200);
+
+
+
+		 /*********************** ALERTS test *******************/
+
+//		RGB_LED_vON(1, 0, 0);
+//		BUZZER_vON();
+//		HAL_Delay(75);
+//		RGB_LED_vOFF();
+//		BUZZER_vOFF();
+//		HAL_Delay(2000);
+//
+//
+//		RGB_LED_vON(0, 1, 0);
+//		BUZZER_vON();
+//		HAL_Delay(75);
+//		RGB_LED_vOFF();
+//		BUZZER_vOFF();
+//		HAL_Delay(2000);
+//
+//		RGB_LED_vON(0, 0, 1);
+//		BUZZER_vON();
+//		HAL_Delay(75);
+//		RGB_LED_vOFF();
+//		BUZZER_vOFF();
+//		HAL_Delay(2000);
+
+
+	 /************  CommBus test  *************/
+	  //	  if (CommBus_MessageAvailable()) {
+	  //	      char *msg = CommBus_GetMessage();
+	  //	      CommBus_MessageType type = CommBus_GetMessageType(msg);
+	  //	      char *payload = CommBus_GetPayload(msg);
+	  //
+	  //	      char* msg_type;
+	  //	      switch(type){
+	  //	  		case GPS:
+	  //	  			msg_type = "type: GPS";
+	  //	  		break;
+	  //	  		case ULT:
+	  //	  			msg_type = "type: ULT";
+	  //	  		break;
+	  //	  		case PIR:
+	  //	  			msg_type = "type: PIR";
+	  //	  		break;
+	  //	      }
+	  //
+	  //
+	  //
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)msg_type, strlen(msg_type), HAL_MAX_DELAY);
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
+	  //
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)"payload: \r\n", strlen("payload \r\n"), HAL_MAX_DELAY);
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)payload, strlen(payload), HAL_MAX_DELAY);
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
+	  //
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)"\r\n[Received]\r\n", strlen("\r\n[Received]\r\n"), HAL_MAX_DELAY);
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	  //	      HAL_UART_Transmit(&huart3, (uint8_t*)"\r\n------------------\r\n", strlen("\r\n------------------\r\n"), HAL_MAX_DELAY);
+	  //
+	  //	      CommBus_ResetMessageReady();  // or message_ready = 0 if internal
+	  //  }
+
+	  //	    CommBus_HandleIncoming();  // checks if THM message was received
+	  //
+	  //	    // Act on updated state
+	  //	    if (THM_Decision == THM_HUM_DETECTED) {
+	  //	        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // LED ON
+	  //	    } else {
+	  //	        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);   // LED OFF
+	  //	    }
+
+
+//	  	CommBus_HandleIncoming();  // checks if THM message was received
+//
+//	  	// Act on updated state
+//	  	if (THM_Decision == THM_HUM_DETECTED) {
+//	  		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET); // LED ON
+//	  	} else {
+//	  		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);   // LED OFF
+//	  	}
+
+	  //	CommBus_SendMessage(PIR, "1");
+	  //	HAL_Delay(500);
+	  //	CommBus_SendMessage(PIR, "0");
+	  //	HAL_Delay(500);
+	  //
+	  //	CommBus_SendMessage(GPS, "https://maps.google.com/?q=24.71366544,46.67537654");
+	  //	HAL_Delay(500);
+	  //	CommBus_SendMessage(ULT, "120");
+	  //	HAL_Delay(500);
 
     /* USER CODE END WHILE */
 
@@ -210,6 +346,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 0 */
 
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
@@ -224,6 +361,15 @@ static void MX_TIM1_Init(void)
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
   {
     Error_Handler();
@@ -289,7 +435,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 576;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 65535;
+  htim2.Init.Period = 2499;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -315,10 +461,6 @@ static void MX_TIM2_Init(void)
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
@@ -327,6 +469,64 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 71;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
 
 }
 
@@ -379,7 +579,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -393,6 +593,39 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -418,10 +651,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Motor_IN1_Pin|Motor_IN2_Pin|Motor_IN3_Pin|Motor_IN4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, MOTOR_DIR1_Pin|MOTOR_EN1_Pin|MOTOR_DIR2_Pin|MOTOR_EN2_Pin
+                          |LED_B_Pin|LED_G_Pin|LED_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_R_Pin|LED_G_Pin|LED_B_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, BUZZER_Pin|ULTRASONIC_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -430,21 +664,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : MOTOR_DIR1_Pin MOTOR_EN1_Pin MOTOR_DIR2_Pin MOTOR_EN2_Pin
+                           LED_B_Pin LED_G_Pin LED_R_Pin */
+  GPIO_InitStruct.Pin = MOTOR_DIR1_Pin|MOTOR_EN1_Pin|MOTOR_DIR2_Pin|MOTOR_EN2_Pin
+                          |LED_B_Pin|LED_G_Pin|LED_R_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PIR_SENSOR_Pin */
   GPIO_InitStruct.Pin = PIR_SENSOR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PIR_SENSOR_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Motor_IN1_Pin Motor_IN2_Pin Motor_IN3_Pin Motor_IN4_Pin */
-  GPIO_InitStruct.Pin = Motor_IN1_Pin|Motor_IN2_Pin|Motor_IN3_Pin|Motor_IN4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LED_R_Pin LED_G_Pin LED_B_Pin */
-  GPIO_InitStruct.Pin = LED_R_Pin|LED_G_Pin|LED_B_Pin;
+  /*Configure GPIO pins : BUZZER_Pin ULTRASONIC_TRIG_Pin */
+  GPIO_InitStruct.Pin = BUZZER_Pin|ULTRASONIC_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -459,7 +695,7 @@ static void MX_GPIO_Init(void)
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)  // if the interrupt source is channel1
+	if (htim->Instance == TIM3 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
 	{
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 
@@ -491,9 +727,17 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 			// set polarity to rising edge
 			__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_1, TIM_INPUTCHANNELPOLARITY_RISING);
-//			__HAL_TIM_DISABLE_IT(&htim1, TIM_IT_CC1);
+			__HAL_TIM_DISABLE_IT(htim, TIM_IT_CC1);
 		}
 	}
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART3) {
+        CommBus_RxHandler();
+    }
 }
 
 /* USER CODE END 4 */

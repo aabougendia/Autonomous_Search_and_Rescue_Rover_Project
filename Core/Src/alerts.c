@@ -1,6 +1,6 @@
 #include "std_types.h"
 #include "main.h"
-#include <alerts.h>
+#include "alerts.h"
 
 
 void LED_vON(GPIO_TypeDef* GPIOx, u16 GPIO_Pin)
@@ -13,14 +13,14 @@ void LED_vOFF(GPIO_TypeDef* GPIOx, u16 GPIO_Pin)
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
 }
 
-void BUZZER_vON(GPIO_TypeDef* GPIOx, u16 GPIO_Pin)
+void BUZZER_vON()
 {
-	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
 }
 
-void BUZZER_vOFF(GPIO_TypeDef* GPIOx, u16 GPIO_Pin)
+void BUZZER_vOFF()
 {
-	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
 }
 
 void RGB_LED_vON(u8 R_State, u8 G_State, u8 B_State)

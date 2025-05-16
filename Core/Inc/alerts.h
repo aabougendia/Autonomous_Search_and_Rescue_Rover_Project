@@ -8,8 +8,8 @@
 
 void LED_vON(GPIO_TypeDef* GPIOx, u16 GPIO_Pin);
 void LED_vOFF(GPIO_TypeDef* GPIOx, u16 GPIO_Pin);
-void BUZZER_vON(GPIO_TypeDef* GPIOx, u16 GPIO_Pin);
-void BUZZER_vOFF(GPIO_TypeDef* GPIOx, u16 GPIO_Pin);
+void BUZZER_vON();
+void BUZZER_vOFF();
 void RGB_LED_vON(u8 R_State, u8 G_State, u8 B_State); //common cathode diffused RGB LED
 void RGB_LED_vOFF();
 void LED_vBlink(GPIO_TypeDef* GPIOx, u16 GPIO_Pin, u32 delay);
