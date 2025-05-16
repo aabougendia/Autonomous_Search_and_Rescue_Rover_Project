@@ -28,13 +28,15 @@
 #include "std_types.h"
 //#include "bit_math.h"
 
-#include "servo.h"
-#include "GPS_Module.h"
-#include "PIR_sensor.h"
-#include "ultrasonic.h"
-#include "motor.h"
-#include "alerts.h"
-#include "CommBus.h"
+#include "System_Flow.h"
+
+//#include "servo.h"
+//#include "GPS_Module.h"
+//#include "PIR_sensor.h"
+//#include "ultrasonic.h"
+//#include "motor.h"
+//#include "alerts.h"
+//#include "CommBus.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -81,7 +83,7 @@ static void MX_USART3_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-char GPS_outputBuffer[150];
+//char GPS_outputBuffer[150];
 
 /* USER CODE END 0 */
 
@@ -121,11 +123,12 @@ int main(void)
   MX_TIM3_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  Servo_Init();
-  GPS_Init();
-  Ultrasonic_Init();
-  Stepper_Init();
-  CommBus_Init(&huart3);
+//  Servo_Init();
+//  GPS_Init();
+//  Ultrasonic_Init();
+//  Stepper_Init();
+//  CommBus_Init(&huart3);
+  SystemFlow_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -150,16 +153,16 @@ int main(void)
 //	  HAL_Delay(3000);
 
 
-	  for (uint8_t ang = 0; ang <= 180; ang++){
-		  Servo_SetAngle(ang);
-		  HAL_Delay(10);
-	  }
-	  HAL_Delay(200);
-	  for (uint8_t ang = 179; ang > 0; ang--){
-		  Servo_SetAngle(ang);
-		  HAL_Delay(10);
-	  }
-	  HAL_Delay(200);
+//	  for (uint8_t ang = 0; ang <= 180; ang++){
+//		  Servo_SetAngle(ang);
+//		  HAL_Delay(10);
+//	  }
+//	  HAL_Delay(200);
+//	  for (uint8_t ang = 179; ang > 0; ang--){
+//		  Servo_SetAngle(ang);
+//		  HAL_Delay(10);
+//	  }
+//	  HAL_Delay(200);
 
 
 	  /*****************    GPS test   ***********************/
@@ -288,6 +291,9 @@ int main(void)
 	  //	CommBus_SendMessage(ULT, "120");
 	  //	HAL_Delay(500);
 
+	  /*******************  Motor test  **************/
+	  Stepper_MoveForward(200);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -399,7 +405,7 @@ static void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
   sBreakDeadTimeConfig.DeadTime = 0;
-  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_ENABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
   if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
@@ -655,7 +661,8 @@ static void MX_GPIO_Init(void)
                           |LED_B_Pin|LED_G_Pin|LED_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, BUZZER_Pin|ULTRASONIC_TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, STATE0_Pin|STATE1_Pin|STATE2_Pin|BUZZER_Pin
+                          |ULTRASONIC_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -673,14 +680,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PIR_SENSOR_Pin */
-  GPIO_InitStruct.Pin = PIR_SENSOR_Pin;
+  /*Configure GPIO pins : PIR_SENSOR_Pin STATE_ACK_Pin */
+  GPIO_InitStruct.Pin = PIR_SENSOR_Pin|STATE_ACK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(PIR_SENSOR_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BUZZER_Pin ULTRASONIC_TRIG_Pin */
-  GPIO_InitStruct.Pin = BUZZER_Pin|ULTRASONIC_TRIG_Pin;
+  /*Configure GPIO pins : STATE0_Pin STATE1_Pin STATE2_Pin BUZZER_Pin
+                           ULTRASONIC_TRIG_Pin */
+  GPIO_InitStruct.Pin = STATE0_Pin|STATE1_Pin|STATE2_Pin|BUZZER_Pin
+                          |ULTRASONIC_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

@@ -79,6 +79,12 @@ void Error_Handler(void);
 #define COMMBUS_TX_GPIO_Port GPIOB
 #define COMMBUS_RX_Pin GPIO_PIN_11
 #define COMMBUS_RX_GPIO_Port GPIOB
+#define STATE0_Pin GPIO_PIN_12
+#define STATE0_GPIO_Port GPIOB
+#define STATE1_Pin GPIO_PIN_13
+#define STATE1_GPIO_Port GPIOB
+#define STATE2_Pin GPIO_PIN_14
+#define STATE2_GPIO_Port GPIOB
 #define BUZZER_Pin GPIO_PIN_15
 #define BUZZER_GPIO_Port GPIOB
 #define MOTOR_A_PWM_Pin GPIO_PIN_8
@@ -91,6 +97,8 @@ void Error_Handler(void);
 #define LED_G_GPIO_Port GPIOA
 #define LED_R_Pin GPIO_PIN_12
 #define LED_R_GPIO_Port GPIOA
+#define STATE_ACK_Pin GPIO_PIN_3
+#define STATE_ACK_GPIO_Port GPIOB
 #define ULTRASONIC_ECHO_Pin GPIO_PIN_4
 #define ULTRASONIC_ECHO_GPIO_Port GPIOB
 #define ULTRASONIC_TRIG_Pin GPIO_PIN_5
