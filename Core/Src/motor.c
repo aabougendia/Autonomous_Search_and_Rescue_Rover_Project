@@ -21,8 +21,8 @@ void Stepper_Init(void)
 
 void Stepper_MoveForward(uint16_t speed)
 {
-    HAL_GPIO_WritePin(DIR1_PORT, DIR1_PIN, GPIO_PIN_RESET);   // Forward
-    HAL_GPIO_WritePin(DIR2_PORT, DIR2_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(DIR1_PORT, DIR1_PIN, GPIO_PIN_SET);   // Forward
+    HAL_GPIO_WritePin(DIR2_PORT, DIR2_PIN, GPIO_PIN_RESET);
 
     __HAL_TIM_SET_AUTORELOAD(STEP_TIMER, 1000 - speed); // Speed sets frequency
     __HAL_TIM_SET_COMPARE(STEP_TIMER, STEP_CHANNEL_A, (1000 - speed) / 2);
@@ -31,8 +31,8 @@ void Stepper_MoveForward(uint16_t speed)
 
 void Stepper_MoveBackward(uint16_t speed)
 {
-    HAL_GPIO_WritePin(DIR1_PORT, DIR1_PIN, GPIO_PIN_SET);  // Backward
-    HAL_GPIO_WritePin(DIR2_PORT, DIR2_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(DIR1_PORT, DIR1_PIN, GPIO_PIN_RESET);  // Backward
+    HAL_GPIO_WritePin(DIR2_PORT, DIR2_PIN, GPIO_PIN_SET);
 
     __HAL_TIM_SET_AUTORELOAD(STEP_TIMER, 1000 - speed); // Speed sets frequency
     __HAL_TIM_SET_COMPARE(STEP_TIMER, STEP_CHANNEL_A, (1000 - speed) / 2);

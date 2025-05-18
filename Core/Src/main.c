@@ -83,7 +83,7 @@ static void MX_USART3_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-//char GPS_outputBuffer[150];
+extern char GPS_outputBuffer[150];
 
 /* USER CODE END 0 */
 
@@ -156,21 +156,29 @@ int main(void)
 //	  for (uint8_t ang = 0; ang <= 180; ang++){
 //		  Servo_SetAngle(ang);
 //		  HAL_Delay(10);
+//		  Ultrasonic_Read();
+//		  char msg[50];
+//		  sprintf(msg, "Distance: %u cm\r\n", Distance);
+//		  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //	  }
 //	  HAL_Delay(200);
 //	  for (uint8_t ang = 179; ang > 0; ang--){
 //		  Servo_SetAngle(ang);
 //		  HAL_Delay(10);
+//		  Ultrasonic_Read();
+//		  char msg[50];
+//		  sprintf(msg, "Distance: %u cm\r\n", Distance);
+//		  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //	  }
 //	  HAL_Delay(200);
 
 
 	  /*****************    GPS test   ***********************/
-//	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
-//
-//	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
-//	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
+	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
 
+	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
+//	  HAL_Delay(50);
 
 	  /*****************    PIR test  ********************/
 //	  if(PIR_Read() == PIR_MOTION_DETECTED){
@@ -183,8 +191,8 @@ int main(void)
 
 	  /*****************   ULTRASONIC test  ********************/
 //		 Ultrasonic_Read();
-
-
+//
+//
 //		 uint32_t timeout = HAL_GetTick();
 //		 while (Is_First_Captured == 1) {
 //		     if (HAL_GetTick() - timeout > 50) {  // 50 ms timeout
@@ -292,7 +300,7 @@ int main(void)
 	  //	HAL_Delay(500);
 
 	  /*******************  Motor test  **************/
-	  Stepper_MoveForward(200);
+//	  Stepper_MoveForward(400);
 
     /* USER CODE END WHILE */
 
@@ -731,7 +739,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 				Difference = (0xffff - IC_Val1) + IC_Val2;
 			}
 
-			Distance = Difference * .034/2;
+			ULT_Distance = Difference * .034/2;
 			Is_First_Captured = 0; // set it back to false
 
 			// set polarity to rising edge

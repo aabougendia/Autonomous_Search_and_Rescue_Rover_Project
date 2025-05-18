@@ -14,7 +14,7 @@ extern volatile uint32_t IC_Val1;
 extern volatile uint32_t IC_Val2;
 extern volatile uint32_t Difference;
 extern volatile uint8_t Is_First_Captured;
-extern volatile uint8_t Distance;
+extern volatile uint8_t ULT_Distance;
 
 
 

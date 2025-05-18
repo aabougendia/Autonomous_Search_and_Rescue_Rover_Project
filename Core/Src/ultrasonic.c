@@ -10,7 +10,7 @@ volatile uint32_t IC_Val1 = 0;
 volatile uint32_t IC_Val2 = 0;
 volatile uint32_t Difference = 0;
 volatile uint8_t Is_First_Captured = 0;
-volatile uint8_t Distance = 0;
+volatile uint8_t ULT_Distance = 0;
 
 void delay (uint16_t time)
 {

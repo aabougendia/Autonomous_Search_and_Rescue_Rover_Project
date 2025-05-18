@@ -19,12 +19,12 @@
 #include "CommBus.h"
 
 typedef enum {
-	RECKONING = 0,
-	AVOID_OBSTACLE = 1,
-	THM_DETECTED = 2,
-	SEND_DATA_TO_OPERATOR = 3,
-	MANUAL_MODE = 4,
-	UNDEFINED = 5
+	 _000_RECONNING              = 0,
+	 _001_AVOID_OBSTACLE         = 1,
+	 _010_THM_DETECTED           = 2,
+	 _011_SEND_DATA_TO_OPERATOR  = 3,
+	 _100_MANUAL_MODE            = 4,
+	 UNDEFINED_STATE             = 5
 } System_State;
 
 void SystemFlow_Init(void);

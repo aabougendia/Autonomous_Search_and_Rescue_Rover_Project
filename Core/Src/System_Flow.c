@@ -34,7 +34,7 @@ char GPS_outputBuffer[150];
 static void Set_State(System_State state);
 static GPIO_PinState Get_Ack();
 
-static void Handle_State_000_Reckoning(void);
+static void Handle_State_000_Reconning(void);
 static void Handle_State_001_Avoid_Obstacle(void);
 static void Handle_State_010_THM_Detected(void);
 static void Handle_State_011_Send_Data_To_Operator(void);
@@ -50,29 +50,31 @@ void SystemFlow_Init(void){
 	  Ultrasonic_Init();
 	  Stepper_Init();
 	  CommBus_Init(&huart3);
+
+	  Set_State(_000_RECONNING);
 }
 
 void SystemFlow_Run(void) {
 	Set_State(system_state);
 
     switch(system_state) {
-        case RECKONING:
-        	Handle_State_000_Reckoning();
+        case _000_RECONNING:
+        	Handle_State_000_Reconning();
             break;
-        case AVOID_OBSTACLE:
+        case _001_AVOID_OBSTACLE:
         	Handle_State_001_Avoid_Obstacle();
             break;
-        case THM_DETECTED:
+        case _010_THM_DETECTED:
         	Handle_State_010_THM_Detected();
             break;
-        case SEND_DATA_TO_OPERATOR:
+        case _011_SEND_DATA_TO_OPERATOR:
         	Handle_State_011_Send_Data_To_Operator();
             break;
-        case MANUAL_MODE:
+        case _100_MANUAL_MODE:
         	Handle_State_100_Manual();
             break;
         default:
-            system_state = UNDEFINED;
+            system_state = UNDEFINED_STATE;
             break;
     }
 }
@@ -90,7 +92,16 @@ static GPIO_PinState Get_Ack(){
 
 
 
-static void Handle_State_000_Reckoning(void){
+static void Handle_State_000_Reconning(void){
+	CommBus_HandleIncoming();
+	/* Run Reconning Algorithm */
+
+	// check Obstacle
+	// check THM
+
+//	if(THM_Decision == THM_HUM_DETECTED){
+//		system_state = _010_THM_DETECTED;
+//	}
 
 }
 static void Handle_State_001_Avoid_Obstacle(void){
