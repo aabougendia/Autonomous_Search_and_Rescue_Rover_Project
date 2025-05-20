@@ -111,6 +111,37 @@ static void Handle_State_000_Reconning(void){
 }
 static void Handle_State_001_Avoid_Obstacle(void){
 	Set_State(_001_AVOID_OBSTACLE);
+
+	volatile uint8_t Right_Distance = 0.0;
+	volatile uint8_t Left_Distance = 0.0;
+
+	// Look to the right
+	Servo_SetAngle(0);
+	Ultrasonic_Read();
+	Right_Distance = ULT_Distance;
+
+	// Look to the left
+	Servo_SetAngle(180);
+	Ultrasonic_Read();
+	Left_Distance = ULT_Distance;
+
+	// Backing a bit to be able to rotate
+	Stepper_MoveBackward(200);
+	HAL_Delay(2000);
+	Stepper_Stop();
+
+	// Deciding to turn right or left
+	(Right_Distance >= Left_Distance)? Stepper_TurnRight(200) : Stepper_TurnLeft(200) ;
+	HAL_Delay(1000);
+	Stepper_Stop();
+
+	// Moving in the direction of more space
+	Stepper_MoveForward (350);
+	HAL_Delay(5000);
+	Stepper_Stop();
+
+	// Setting system_state back to RECONNING
+	system_state = _000_RECONNING;
 }
 static void Handle_State_010_THM_Detected(void){
 	Set_State(_010_THM_DETECTED);
