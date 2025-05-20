@@ -158,7 +158,7 @@ int main(void)
 //		  HAL_Delay(10);
 //		  Ultrasonic_Read();
 //		  char msg[50];
-//		  sprintf(msg, "Distance: %u cm\r\n", Distance);
+//		  sprintf(msg, "Distance: %u cm\r\n", ULT_Distance);
 //		  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //	  }
 //	  HAL_Delay(200);
@@ -167,17 +167,17 @@ int main(void)
 //		  HAL_Delay(10);
 //		  Ultrasonic_Read();
 //		  char msg[50];
-//		  sprintf(msg, "Distance: %u cm\r\n", Distance);
+//		  sprintf(msg, "Distance: %u cm\r\n", ULT_Distance);
 //		  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //	  }
 //	  HAL_Delay(200);
 
 
 	  /*****************    GPS test   ***********************/
-	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
-
-	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
+//	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
+//
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
 //	  HAL_Delay(50);
 
 	  /*****************    PIR test  ********************/
@@ -301,7 +301,13 @@ int main(void)
 
 	  /*******************  Motor test  **************/
 //	  Stepper_MoveForward(400);
-
+//	  HAL_Delay(2000);
+//	  Stepper_Stop();
+//	  HAL_Delay(2000);
+//	  Stepper_MoveBackward(400);
+//	  HAL_Delay(2000);
+//	  Stepper_Stop();
+//	  HAL_Delay(2000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
