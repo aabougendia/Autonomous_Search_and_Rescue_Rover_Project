@@ -1,11 +1,17 @@
 #include "CommBus.h"
 
 
+
+
 CommBus::CommBus(HardwareSerial& serialPort) : serial(serialPort) {}
 
-void CommBus::begin(unsigned long baud) {
-  serial.begin(baud);
+void CommBus::begin(unsigned long baud, int rx, int tx) {
+  lastBaud = baud;
+  rxPin = rx;
+  txPin = tx;
+  serial.begin(baud, SERIAL_8N1, rx, tx);
 }
+
 
 // void CommBus::handleIncoming() {
 //   while(serial.available()){
@@ -18,11 +24,14 @@ void CommBus::begin(unsigned long baud) {
 // }
 
 void CommBus::handleIncoming() {
+  if (!enabled) return; 
+
   while (serial.available()) {
     char byte = serial.read();
     processByte(byte);
   }
 }
+
 
 void CommBus::processByte(char byte){
   if(messageReady) return;
@@ -54,6 +63,9 @@ CommBus_MessageType CommBus::getMessageType(const String& msg) {
     if (msg.startsWith("ULT:")) return ULT;
     if (msg.startsWith("PIR:")) return PIR;
     if (msg.startsWith("THM:")) return THM;
+    if (msg.startsWith("DRV:")) return DRV;
+    if (msg.startsWith("SRV:")) return SRV;
+
     return UNKNOWN;
 }
 
@@ -108,15 +120,28 @@ void CommBus::resetTHM(){
 void CommBus::sendMessage(CommBus_MessageType type, const String& payload) {
     String msgType;
     switch (type) {
-        case GPS: msgType = "GPS"; break;
-        case ULT: msgType = "ULT"; break;
-        case PIR: msgType = "PIR"; break;
         case THM: msgType = "THM"; break;
+        case DRV: msgType = "DRV"; break;
+        case SRV: msgType = "SRV"; break;
         default:  msgType = "UNKNOWN"; break;
     }
     serial.print(msgType + ":" + payload + "\n");
 }
 
 
+void CommBus::enable() {
+  if (enabled) return;
+  enabled = true;
+  serial.begin(lastBaud, SERIAL_8N1, rxPin, txPin);
+}
 
+void CommBus::disable() {
+  enabled = false;
+  serial.end();
+
+  // Optional: flush lingering data
+  while (serial.available()) {
+    serial.read();  // drain any leftover bytes
+  }
+}
 

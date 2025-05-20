@@ -11,12 +11,15 @@ typedef enum {
     ULT,
     PIR,
     THM,
+    DRV,
+    SRV,
     UNKNOWN
 } CommBus_MessageType;
 
 typedef enum {
     PIR_MOTION_NOT_DETECTED = 0,
-    PIR_MOTION_DETECTED = 1
+    PIR_MOTION_DETECTED = 1,
+    PIR_EMPTY = 2
 } PIR_MotionDecision;
 
 
@@ -26,14 +29,17 @@ class CommBus {
 
         String GPS_GoogleMapsLink = "";
         int ULT_Distance = 0;
-        PIR_MotionDecision PIR_Decision = PIR_MOTION_NOT_DETECTED;
+        PIR_MotionDecision PIR_Decision = PIR_EMPTY;
 
-        void begin(unsigned long baud);
+
+
+        void begin(unsigned long baud, int rx, int tx);
         void handleIncoming();
-
         void sendMessage(CommBus_MessageType type, const String& payload);
-
         bool isMessageReady() const;
+
+        void enable();
+        void disable();
 
 
         void resetGPS();
@@ -44,9 +50,16 @@ class CommBus {
     private:
         HardwareSerial& serial;
 
+        unsigned long lastBaud = 115200;
+        int rxPin = 16;
+        int txPin = 17;
+
+        bool enabled = true;
+
         char rxBuffer[RX_BUF_SIZE];
         size_t rxIndex = 0;
         bool messageReady = false;
+
 
         CommBus_MessageType getMessageType(const String& msg);
         String getPayload(const String& msg);

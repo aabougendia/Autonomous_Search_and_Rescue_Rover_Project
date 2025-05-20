@@ -28,6 +28,7 @@ static System_State system_state = 0; // Start in autonomous
 
 
 char GPS_outputBuffer[150];
+PIR_OUT PIR_motion_decision;
 
 
 // Forward declarations
@@ -93,6 +94,9 @@ static GPIO_PinState Get_Ack(){
 
 
 static void Handle_State_000_Reconning(void){
+	Set_State(_000_RECONNING);
+
+	CommBus_Enable();
 	CommBus_HandleIncoming();
 	/* Run Reconning Algorithm */
 
@@ -105,9 +109,32 @@ static void Handle_State_000_Reconning(void){
 
 }
 static void Handle_State_001_Avoid_Obstacle(void){
-
+	Set_State(_001_AVOID_OBSTACLE);
 }
 static void Handle_State_010_THM_Detected(void){
+	Set_State(_010_THM_DETECTED);
+
+
+	// Read motion decision from PIR
+	PIR_motion_decision = PIR_Read();
+
+
+	// Get GPS google maps link
+	strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
+
+	// Send Data through CommBus
+	CommBus_SendMessage(GPS, GPS_outputBuffer);
+	HAL_Delay(100);
+
+	if(PIR_motion_decision == PIR_MOTION_DETECTED)
+		CommBus_SendMessage(PIR, "1");
+	else
+		CommBus_SendMessage(PIR, "0");
+
+	HAL_Delay(100);
+	while(Get_Ack() == GPIO_PIN_RESET);
+
+	system_state = _011_SEND_DATA_TO_OPERATOR;
 
 }
 static void Handle_State_011_Send_Data_To_Operator(void){

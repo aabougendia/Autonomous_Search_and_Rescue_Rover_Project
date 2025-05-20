@@ -17,6 +17,8 @@ enum SystemState {
   UNDEFINED_STATE             = 5
 };
 
+extern CommBus comm;
+
 void SystemFlow_Init();
 void SystemFlow_Run();
 

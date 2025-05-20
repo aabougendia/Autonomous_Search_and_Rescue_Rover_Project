@@ -9,8 +9,11 @@
 
 SystemState sys_state = _000_RECONNING;
 
+CommBus comm(Serial2);
+
 static SystemState Get_State();
 static void Set_Ack();
+static void Reset_Ack();
 static void waitBeforeClearingAck();
 
 static void Handle_State_000_Reconning(void);
@@ -27,6 +30,8 @@ void SystemFlow_Init(){
   pinMode(STATE_ACK_PIN, OUTPUT);
 
   digitalWrite(STATE_ACK_PIN, LOW); // Ensure ACK starts LOW
+
+  comm.begin(115200, 16, 17);
 }
 
 void SystemFlow_Run(){
@@ -65,7 +70,8 @@ static SystemState Get_State(){
 
 static void Set_Ack(){
   digitalWrite(STATE_ACK_PIN, HIGH);
-  waitBeforeClearingAck(); // hold ACK high for stability
+}
+static void Reset_Ack(){
   digitalWrite(STATE_ACK_PIN, LOW);
 }
 
@@ -74,17 +80,46 @@ static void waitBeforeClearingAck() {
 }
 
 static void Handle_State_000_Reconning(void){
+  Reset_Ack();
 
+  Set_Ack();
 }
 static void Handle_State_001_Avoid_Obstacle(void){
-
+  Reset_Ack();
 }
 static void Handle_State_010_THM_Detected(void){
+  Reset_Ack();
+  
+  comm.enable();
+  comm.handleIncoming();
 
+  while(comm.GPS_GoogleMapsLink == "" || comm.PIR_Decision == PIR_EMPTY);
+
+  comm.disable();
+
+  comm.GPS_GoogleMapsLink = "";
+  comm.PIR_Decision = PIR_EMPTY;
+
+  Set_Ack();
+  
 }
 static void Handle_State_011_Send_Data_To_Operator(void){
+  Reset_Ack();
 
+  Set_Ack();
 }
 static void Handle_State_100_Manual(void){
+  Reset_Ack();
 
+  // switch (input) {
+  //   case 'w': comm.sendDriveCommand('F'); break;
+  //   case 's': comm.sendDriveCommand('B'); break;
+  //   case 'a': comm.sendDriveCommand('L'); break;
+  //   case 'd': comm.sendDriveCommand('R'); break;
+
+  //   case 'j': comm.sendCameraCommand('L'); break;
+  //   case 'l': comm.sendCameraCommand('R'); break;
+  // }
+
+  Set_Ack();
 }

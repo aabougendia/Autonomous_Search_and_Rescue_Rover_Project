@@ -6,6 +6,8 @@
  */
 #include "main.h"
 #include "CommBus.h"
+#include "servo.h"
+#include "motor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +18,9 @@
 
 static UART_HandleTypeDef *CommBus_huart;
 
+static uint8_t comm_enabled = 1;
+
+
 static char rx_buffer[RX_BUFFER_SIZE];
 static uint16_t rx_index = 0;
 static uint8_t message_ready = 0;
@@ -25,11 +30,19 @@ static char tx_buffer[TX_BUFFER_SIZE];
 
 CommBus_Detected THM_Decision = THM_HUM_NOT_DETECTED;
 
+static int servo_angle = 90;
+#define SERVO_ANGLE_MIN 0
+#define SERVO_ANGLE_MAX 180
+#define SERVO_ANGLE_STEP 1
+
+#define DRIVE_SPEED	400
+#define DRIVE_DELAY	100
 
 void CommBus_Init(UART_HandleTypeDef *huart){
 	CommBus_huart = huart;
 	rx_index = 0;
 	message_ready = 0;
+	THM_Decision = THM_HUM_NOT_DETECTED;
 
 	HAL_UART_Receive_IT(CommBus_huart, &rx_byte, 1);
 }
@@ -55,6 +68,13 @@ static void CommBus_ProcessByte(uint8_t byte){
 }
 
 void CommBus_RxHandler(void){
+
+    if (!comm_enabled) {
+        // Re-arm RX even if disabled, to avoid getting stuck
+        HAL_UART_Receive_IT(CommBus_huart, &rx_byte, 1);
+        return;
+    }
+
 	CommBus_ProcessByte(rx_byte);
     HAL_UART_Receive_IT(CommBus_huart, &rx_byte, 1);
 }
@@ -81,6 +101,15 @@ CommBus_MessageType CommBus_GetMessageType(char *msg){
 	}
 	else if (msg[0] == 'P' && msg[1] == 'I' && msg[2] == 'R' && msg[3] == ':'){
 		message_type = PIR;
+	}
+	else if (msg[0] == 'D' && msg[1] == 'R' && msg[2] == 'V' && msg[3] == ':'){
+		message_type = DRV;
+	}
+	else if (msg[0] == 'S' && msg[1] == 'R' && msg[2] == 'V' && msg[3] == ':'){
+		message_type = SRV;
+	}
+	else {
+		message_type = UNKNOWN;
 	}
 
 	return message_type;
@@ -119,7 +148,9 @@ void CommBus_SendMessage(CommBus_MessageType type, const char* payload){
 
 void CommBus_ResetMessageReady(){
 	message_ready = 0;
+	rx_index = 0;
 }
+
 
 void CommBus_ParseTHM(char* payload){
 	switch (atoi(payload)){
@@ -136,6 +167,44 @@ void CommBus_ResetTHMDecision(){
 	THM_Decision = THM_HUM_NOT_DETECTED;
 }
 
+
+void CommBus_ParseDRV(char* payload){
+	if (strcmp(payload, "F") == 0){
+//		Rover_DriveForward();  // implement this
+		Stepper_MoveForward(DRIVE_SPEED);
+		HAL_Delay(DRIVE_DELAY);
+		Stepper_Stop();
+	}
+	else if (strcmp(payload, "B") == 0){
+//		Rover_DriveBackward();
+		Stepper_MoveBackward(DRIVE_SPEED);
+		HAL_Delay(DRIVE_DELAY);
+		Stepper_Stop();
+	}
+	else if (strcmp(payload, "L") == 0){
+//		Rover_TurnLeft();
+		Stepper_TurnLeft(DRIVE_SPEED);
+		HAL_Delay(DRIVE_DELAY);
+		Stepper_Stop();
+	}
+	else if (strcmp(payload, "R") == 0){
+//		Rover_TurnRight();
+		Stepper_TurnRight(DRIVE_SPEED);
+		HAL_Delay(DRIVE_DELAY);
+		Stepper_Stop();
+	}
+}
+
+void CommBus_ParseSRV(char* payload){
+	if (strcmp(payload, "L") == 0 && servo_angle > SERVO_ANGLE_MIN) {
+		servo_angle -= SERVO_ANGLE_STEP;
+	}
+	else if (strcmp(payload, "R") == 0 && servo_angle < SERVO_ANGLE_MAX) {
+		servo_angle += SERVO_ANGLE_STEP;
+	}
+	Servo_SetAngle(servo_angle);  // adjust to your actual camera servo API
+}
+
 /* To call in main.c */
 void CommBus_HandleIncoming(){
 	if(!CommBus_MessageAvailable())	return;
@@ -149,7 +218,12 @@ void CommBus_HandleIncoming(){
 		case THM:
 			CommBus_ParseTHM(payload);
 			break;
-
+		case DRV:
+			CommBus_ParseDRV(payload);
+			break;
+		case SRV:
+			CommBus_ParseSRV(payload);
+			break;
 		default:
 			HAL_UART_Transmit(CommBus_huart, (uint8_t*)"[WARN] Unsupported msg type\r\n", 30, HAL_MAX_DELAY);
 			break;
@@ -159,4 +233,11 @@ void CommBus_HandleIncoming(){
 
 }
 
+void CommBus_Enable(void){
+    comm_enabled = 1;
+}
+
+void CommBus_Disable(void){
+    comm_enabled = 0;
+}
 
