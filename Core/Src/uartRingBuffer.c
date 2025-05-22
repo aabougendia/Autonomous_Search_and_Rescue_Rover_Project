@@ -13,6 +13,7 @@
 /**** define the UART you are using  ****/
 
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
 
 #define uart &huart1
 
@@ -386,50 +387,111 @@ void Uart_isr (UART_HandleTypeDef *huart)
     }
 }
 
-int Get_latest_sentence(char *prefix, char *out_sentence) {
-    int i = (_rx_buffer->head - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
-    int start_idx = -1, end_idx = -1;
-    int len = strlen(prefix);
+//int Get_latest_sentence(char *prefix, char *out_sentence) {
+//    int i = (_rx_buffer->head - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+//    int start_idx = -1, end_idx = -1;
+//    int len = strlen(prefix);
+//
+//    // Find '\n' (end of latest sentence)
+//    while (1) {
+//        if (_rx_buffer->buffer[i] == '\n') {
+//            end_idx = (i + 1) % UART_BUFFER_SIZE;
+//            break;
+//        }
+//        if (i == _rx_buffer->tail) return 0;
+//        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+//    }
+//
+//    // Find start of sentence (e.g. "$GPGGA")
+//    while (1) {
+//        int match = 1;
+//        for (int j = 0; j < len; j++) {
+//            int buf_i = (i + j) % UART_BUFFER_SIZE;
+//            if (_rx_buffer->buffer[buf_i] != prefix[j]) {
+//                match = 0;
+//                break;
+//            }
+//        }
+//        if (match) {
+//            start_idx = i;
+//            break;
+//        }
+//        if (i == _rx_buffer->tail) return 0;
+//        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+//    }
+//
+//    // Copy from start_idx to end_idx
+//    int idx = 0;
+//    i = start_idx;
+//    while (i != end_idx && idx < 99) {
+//        out_sentence[idx++] = _rx_buffer->buffer[i];
+//        i = (i + 1) % UART_BUFFER_SIZE;
+//    }
+//    out_sentence[idx] = '\0';
+//
+//    return 1;
+//}
 
-    // Find '\n' (end of latest sentence)
-    while (1) {
-        if (_rx_buffer->buffer[i] == '\n') {
-            end_idx = (i + 1) % UART_BUFFER_SIZE;
-            break;
-        }
-        if (i == _rx_buffer->tail) return 0;
-        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+void Debug_Print_Buffer(void) {
+	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n--- RX Buffer Dump ---\r\n", strlen("\r\n--- RX Buffer Dump ---\r\n"), HAL_MAX_DELAY);
+    int pos = _rx_buffer->tail;
+    while (pos != _rx_buffer->head) {
+//    	HAL_UART_Transmit(&huart2, &(_rx_buffer->buffer[pos]), 1, 10);
+    	 HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n**\r\n", strlen("\r\n**\r\n"), HAL_MAX_DELAY);
+        pos = (pos + 1) % UART_BUFFER_SIZE;
     }
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n----------------------\r\n", strlen("\r\n----------------------\r\n"), HAL_MAX_DELAY);
+}
 
-    // Find start of sentence (e.g. "$GPGGA")
-    while (1) {
+int Get_latest_sentence(char *prefix, char *out_sentence) {
+    int len = strlen(prefix);
+    int i = _rx_buffer->head;
+    int found = 0;
+    int start = -1;
+    int end = -1;
+
+    // Scan backwards from head to tail
+    for (int count = 0; count < UART_BUFFER_SIZE; count++) {
+        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+
+        if (_rx_buffer->buffer[i] == '\n') {
+            end = (i + 1) % UART_BUFFER_SIZE;
+        }
+
+        // Look for prefix match
         int match = 1;
         for (int j = 0; j < len; j++) {
-            int buf_i = (i + j) % UART_BUFFER_SIZE;
-            if (_rx_buffer->buffer[buf_i] != prefix[j]) {
+            int idx = (i + j) % UART_BUFFER_SIZE;
+            if (_rx_buffer->buffer[idx] != prefix[j]) {
                 match = 0;
                 break;
             }
         }
+
         if (match) {
-            start_idx = i;
+            start = i;
+            found = 1;
             break;
         }
-        if (i == _rx_buffer->tail) return 0;
-        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+
+        if (i == _rx_buffer->tail) break;
     }
 
-    // Copy from start_idx to end_idx
+    if (!found || start == -1 || end == -1)
+        return 0;
+
+    // Copy from start to end (wrap-safe)
     int idx = 0;
-    i = start_idx;
-    while (i != end_idx && idx < 99) {
-        out_sentence[idx++] = _rx_buffer->buffer[i];
-        i = (i + 1) % UART_BUFFER_SIZE;
+    int pos = start;
+    while (pos != end && idx < 99) {
+        out_sentence[idx++] = _rx_buffer->buffer[pos];
+        pos = (pos + 1) % UART_BUFFER_SIZE;
     }
-    out_sentence[idx] = '\0';
 
+    out_sentence[idx] = '\0';
     return 1;
 }
+
 
 /*** Deprecated For now. This is not needed, try using other functions to meet the requirement ***/
 /*

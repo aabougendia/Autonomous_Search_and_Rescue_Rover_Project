@@ -217,20 +217,36 @@ static void Handle_State_010_THM_Detected(void){
 //		Set_State(_010_THM_DETECTED);
 	    LOG_UART("STM32: 010 state : THM DETECTED\n");
 
-	    // Simulate PIR motion detected
-	    PIR_motion_decision = PIR_MOTION_DETECTED;
-	    strcpy(GPS_outputBuffer, "https://maps.google.com/?q=30.0444,31.2357");
+	    // Simulate dummy PIR motion detected and GPS
+//	    PIR_motion_decision = PIR_MOTION_DETECTED;
+//	    strcpy(GPS_outputBuffer, "https://maps.google.com/?q=30.0444,31.2357");
+
+	    // getting PIR Reading
+	    PIR_motion_decision = PIR_Read();
+	    char PIR_OutBuf[10];
+	    if(PIR_motion_decision == PIR_MOTION_DETECTED){
+	    	strcpy(PIR_OutBuf, "1");
+	    }
+	    else if(PIR_motion_decision == PIR_NO_MOTION){
+	    	strcpy(PIR_OutBuf, "0");
+	    }
+	    else {
+		    strcpy(PIR_OutBuf, "PIR Err");
+	    }
+
+	    // getting GPS Reading
+	    strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
 
 	    // Wait for ESP to signal ACK R HIGH
 //	    while(Get_ReceiveAck() == GPIO_PIN_RESET);
 
 	    HAL_Delay(100); // NEW: Let ESP enter receive mode fully
 
-	    LOG_UART("STM32: Sending dummy GPS and PIR\n");
+	    LOG_UART("STM32: Sending GPS and PIR\n");
 	    while(Get_ReceiveAck() == GPIO_PIN_RESET){
 	    	CommBus_SendMessage(GPS, GPS_outputBuffer);
 	    	HAL_Delay(50);
-	    	CommBus_SendMessage(PIR, "1");
+	    	CommBus_SendMessage(PIR, PIR_OutBuf);
 //	    	LOG_UART("-");
 	    }
 
