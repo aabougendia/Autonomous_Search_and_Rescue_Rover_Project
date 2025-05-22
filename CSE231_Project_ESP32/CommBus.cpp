@@ -75,20 +75,25 @@ String CommBus::getPayload(const String& msg) {
 }
 
 void CommBus::dispatchMessage(const String& msg) {
+
+  Serial.print("[RAW MSG] ");
+  Serial.println(msg);
+
+
     CommBus_MessageType type = getMessageType(msg);
     String payload = getPayload(msg);
 
     switch (type) {
         case GPS:
-            // Serial.println("[GPS] " + payload);
+            Serial.println("[GPS] " + payload);
             this->GPS_GoogleMapsLink = payload;
             break;
         case ULT:
-            // Serial.println("[ULT] " + payload + " cm");
+            Serial.println("[ULT] " + payload + " cm");
             this->ULT_Distance = payload.toInt();
             break;
         case PIR:
-            // Serial.println("[PIR] Motion: " + payload);
+            Serial.println("[PIR] Motion: " + payload);
             this->PIR_Decision = payload == "1" ? PIR_MOTION_DETECTED : PIR_MOTION_NOT_DETECTED;
             break;
         default:

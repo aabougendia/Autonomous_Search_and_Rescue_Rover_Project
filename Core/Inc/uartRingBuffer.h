@@ -92,7 +92,7 @@ int Wait_for (char *string);
 /* the ISR for the uart. put it in the IRQ handler */
 void Uart_isr (UART_HandleTypeDef *huart);
 
-
+int Get_latest_sentence(char *prefix, char *out_sentence);
 
 /*** Depreciated For now. This is not needed, try using other functions to meet the requirement ***/
 /* get the position of the given string within the incoming data.

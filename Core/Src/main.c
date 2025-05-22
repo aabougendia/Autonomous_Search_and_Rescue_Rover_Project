@@ -299,6 +299,19 @@ int main(void)
 	  //	CommBus_SendMessage(ULT, "120");
 	  //	HAL_Delay(500);
 
+
+//	  char gpsBuffer[100];
+//
+//
+//	  // Simulate GPS message
+//	  strcpy(gpsBuffer, "https://maps.google.com/?q=30.0444,31.2357");
+//	  CommBus_SendMessage(GPS, gpsBuffer);
+//	  HAL_Delay(500);  // for visibility
+//
+//	  // Simulate PIR decision
+//	  CommBus_SendMessage(PIR, "1");  // or "0"
+//	  HAL_Delay(500);
+
 	  /*******************  Motor test  **************/
 //	  Stepper_MoveForward(400);
 //	  HAL_Delay(2000);
@@ -308,6 +321,27 @@ int main(void)
 //	  HAL_Delay(2000);
 //	  Stepper_Stop();
 //	  HAL_Delay(2000);
+
+
+
+
+	  /***************   system flow test  ********************/
+//	  LOG_UART("in main\r\n");
+	  SystemFlow_Run();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -419,7 +453,7 @@ static void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
   sBreakDeadTimeConfig.DeadTime = 0;
-  sBreakDeadTimeConfig.BreakState = TIM_BREAK_ENABLE;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
   if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
@@ -694,8 +728,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PIR_SENSOR_Pin STATE_ACK_Pin */
-  GPIO_InitStruct.Pin = PIR_SENSOR_Pin|STATE_ACK_Pin;
+  /*Configure GPIO pins : PIR_SENSOR_Pin STATE_ACK_R_Pin STATE_ACK_S_Pin */
+  GPIO_InitStruct.Pin = PIR_SENSOR_Pin|STATE_ACK_R_Pin|STATE_ACK_S_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

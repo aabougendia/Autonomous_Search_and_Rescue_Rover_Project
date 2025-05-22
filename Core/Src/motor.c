@@ -6,7 +6,7 @@ extern TIM_HandleTypeDef htim1;
 
 void Stepper_Init(void)
 {
-    // Enable both motors (assuming EN is active low, adjust if opposite)
+    // Disable both motors (assuming EN is active low, adjust if opposite)
     HAL_GPIO_WritePin(EN1_PORT, EN1_PIN, GPIO_PIN_SET);
     HAL_GPIO_WritePin(EN2_PORT, EN2_PIN, GPIO_PIN_SET);
 

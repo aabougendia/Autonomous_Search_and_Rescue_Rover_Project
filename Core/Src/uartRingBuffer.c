@@ -386,6 +386,50 @@ void Uart_isr (UART_HandleTypeDef *huart)
     }
 }
 
+int Get_latest_sentence(char *prefix, char *out_sentence) {
+    int i = (_rx_buffer->head - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+    int start_idx = -1, end_idx = -1;
+    int len = strlen(prefix);
+
+    // Find '\n' (end of latest sentence)
+    while (1) {
+        if (_rx_buffer->buffer[i] == '\n') {
+            end_idx = (i + 1) % UART_BUFFER_SIZE;
+            break;
+        }
+        if (i == _rx_buffer->tail) return 0;
+        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+    }
+
+    // Find start of sentence (e.g. "$GPGGA")
+    while (1) {
+        int match = 1;
+        for (int j = 0; j < len; j++) {
+            int buf_i = (i + j) % UART_BUFFER_SIZE;
+            if (_rx_buffer->buffer[buf_i] != prefix[j]) {
+                match = 0;
+                break;
+            }
+        }
+        if (match) {
+            start_idx = i;
+            break;
+        }
+        if (i == _rx_buffer->tail) return 0;
+        i = (i - 1 + UART_BUFFER_SIZE) % UART_BUFFER_SIZE;
+    }
+
+    // Copy from start_idx to end_idx
+    int idx = 0;
+    i = start_idx;
+    while (i != end_idx && idx < 99) {
+        out_sentence[idx++] = _rx_buffer->buffer[i];
+        i = (i + 1) % UART_BUFFER_SIZE;
+    }
+    out_sentence[idx] = '\0';
+
+    return 1;
+}
 
 /*** Deprecated For now. This is not needed, try using other functions to meet the requirement ***/
 /*

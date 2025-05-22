@@ -21,11 +21,13 @@ void setup() {
   // pinMode(2, OUTPUT);
   // digitalWrite(2, LOW);
 
-  Serial.begin(115200);
-  if (!thermalSensor.begin()) {
-    Serial.println("Sensor not found!");
-    while (true);
-  }
+  // Serial.begin(115200);
+  // if (!thermalSensor.begin()) {
+  //   Serial.println("Sensor not found!");
+  //   while (true);
+  // }
+  // Serial.println("in main setup\n");
+  SystemFlow_Init();
 
 
 }
@@ -40,16 +42,18 @@ void loop() {
   //   comm.sendMessage(THM, "0");
   //   delay(500);
   // }
-  // //   comm.handleIncoming();   // Continuously process incoming messages
+  
 
   // // Example: print received sensor data
   // it = INT_MAX;
   // while(it--){
-  //   // Serial.println("____________________________________");
-  //   Serial.println("ULT = " + String(comm.ULT_Distance));
-  //   Serial.println("GPS = " + comm.GPS_GoogleMapsLink);
-  //   Serial.println("PIR = " + String(comm.PIR_Decision));
-
+    // Serial.println("____________________________________");
+  // comm.enable();
+  // comm.handleIncoming();   // Continuously process incoming messages
+    // Serial.println("ULT = " + String(comm.ULT_Distance));
+    // Serial.println("GPS = " + comm.GPS_GoogleMapsLink);
+    // Serial.println("PIR = " + String(comm.PIR_Decision));
+    // delay(500);
   //   if(comm.PIR_Decision == PIR_MOTION_DETECTED)
   //     digitalWrite(2, HIGH);
   //   else
@@ -63,12 +67,22 @@ void loop() {
     // thermalSensor.printPixels();  // Optional
     // delay(1000);
 
-  if (thermalSensor.detectHumanRelative()) {
-    Serial.println("Human detected (ambient-aware)");
-  } else {
-    Serial.println("No human detected");
-  }
-  delay(500);
+  // if (thermalSensor.detectHumanRelative()) {
+  //   Serial.println("Human detected (ambient-aware)");
+  // } else {
+  //   Serial.println("No human detected");
+  // }
+  // delay(500);
+
+
+
+
+
+
+  // Serial.println("in system loop\n");
+  SystemFlow_Run();
+
+
 
 }
 

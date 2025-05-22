@@ -18,6 +18,21 @@
 #include "alerts.h"
 #include "CommBus.h"
 
+
+
+#define LOG_UART(...) do { \
+    char buf[100]; \
+    snprintf(buf, sizeof(buf), __VA_ARGS__); \
+    HAL_UART_Transmit(&huart2, (uint8_t*)buf, strlen(buf), HAL_MAX_DELAY); \
+     HAL_UART_Transmit(&huart2, (uint8_t*)"_______________________________\r\n", strlen("_______________________________\r\n"), HAL_MAX_DELAY);\
+} while(0)
+
+
+
+
+
+
+
 typedef enum {
 	 _000_RECONNING              = 0,
 	 _001_AVOID_OBSTACLE         = 1,

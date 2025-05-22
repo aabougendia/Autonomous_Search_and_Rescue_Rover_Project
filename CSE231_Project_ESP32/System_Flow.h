@@ -19,6 +19,9 @@ enum SystemState {
 
 extern CommBus comm;
 
+extern String GPS_ReceivedGoogleMapsLink;
+extern PIR_MotionDecision PIR_ReceivedMotionDecision;
+
 void SystemFlow_Init();
 void SystemFlow_Run();
 
