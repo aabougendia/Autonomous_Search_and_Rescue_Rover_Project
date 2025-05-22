@@ -13,6 +13,9 @@
 #include "NMEA.h"
 
 #include "GPS_Module.h"
+
+extern UART_HandleTypeDef huart2;
+
 char GGA[100];
 char RMC[100];
 
@@ -179,8 +182,16 @@ char* GPS_getLocation() {
 //	  return mapsBuffer;
 //}
 
+
+
+
 char* GPS_getGoogleMapsLink() {
+
+	Debug_Print_Buffer();
+
+	HAL_UART_Transmit(&huart2, (uint8_t*)"CHECK GGA\r\n", strlen("CHECK GGA\r\n"), HAL_MAX_DELAY);
     if (Get_latest_sentence("$GPGGA", GGA)) {
+    	HAL_UART_Transmit(&huart2, (uint8_t*)"GGA FOUND\r\n", strlen("GGA FOUND\r\n"), HAL_MAX_DELAY);
         if (decodeGGA(GGA, &gpsData.ggastruct) == 0)
             flagGGA = 2;
         else
@@ -207,6 +218,7 @@ char* GPS_getGoogleMapsLink() {
     	strcpy(mapsBuffer, "https://www.google.com/maps?q=30.02257390, 31.70795646");
     } else {
         strcpy(mapsBuffer, "Error\r\n");
+//    	strcpy(mapsBuffer, "https://www.google.com/maps?q=30.02257390, 31.70795646");
     }
 
     return mapsBuffer;

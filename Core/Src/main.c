@@ -174,11 +174,11 @@ int main(void)
 
 
 	  /*****************    GPS test   ***********************/
-//	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
-//
-//	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
-//	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
-//	  HAL_Delay(50);
+	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
+
+	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
+	  HAL_Delay(50);
 
 	  /*****************    PIR test  ********************/
 //	  if(PIR_Read() == PIR_MOTION_DETECTED){
@@ -327,7 +327,7 @@ int main(void)
 
 	  /***************   system flow test  ********************/
 //	  LOG_UART("in main\r\n");
-	  SystemFlow_Run();
+//	  SystemFlow_Run();
 
 
 
