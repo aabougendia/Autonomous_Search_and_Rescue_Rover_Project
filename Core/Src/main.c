@@ -128,13 +128,27 @@ int main(void)
   MX_USART3_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-  MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98, 0.004);
+
 //  Servo_Init();
 //  GPS_Init();
 //  Ultrasonic_Init();
 //  Stepper_Init();
 //  CommBus_Init(&huart3);
+
   SystemFlow_Init();
+
+  MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
+
+  char dbg[100];
+  sprintf(dbg, "aScale=%.2f gScale=%.2f dt=%.4f tau=%.2f\r\n", aScaleFactor, gScaleFactor, _dt, _tau);
+  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
+
+
+  MPU6050_calibrateGyro(&hi2c1, 1000);
+  printf("GyroCal Z = %.2f\r\n", gyroCal.z);
+  sprintf(dbg, "GyroCal Z = %.2f\r\n", gyroCal.z);
+  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -180,11 +194,11 @@ int main(void)
 
 
 	  /*****************    GPS test   ***********************/
-	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
-
-	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
-	  HAL_Delay(50);
+//	  strcpy(GPS_outputBuffer, GPS_getGoogleMapsLink());
+//
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)GPS_outputBuffer, strlen(GPS_outputBuffer), HAL_MAX_DELAY);
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n-----------------------------------\r\n", strlen("\r\n-----------------------------------\r\n"), HAL_MAX_DELAY);
+//	  HAL_Delay(50);
 
 	  /*****************    PIR test  ********************/
 //	  if(PIR_Read() == PIR_MOTION_DETECTED){
@@ -337,11 +351,20 @@ int main(void)
 
 
 
+	 /**************  MPU test  *******************/
 
+	  MPU6050_calcAttitude(&hi2c1);
 
+	  char buffer[50];  // Make sure the buffer is large enough
 
+	  sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	  // Convert float to string
+	  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
 
-
+	  // Transmit over UART
+	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	  HAL_Delay(200);
 
 
 

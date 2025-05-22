@@ -1,10 +1,13 @@
 #include "mpu6050.h"
 #include "main.h"
+#include <string.h>
 
 struct RawData rawData;
 struct SensorData sensorData;
 struct GyroCal gyroCal;
 struct Attitude attitude;
+
+extern UART_HandleTypeDef huart2;
 
 uint8_t _addr;
 float _dt, _tau;
@@ -36,10 +39,19 @@ uint8_t MPU6050_init(I2C_HandleTypeDef *I2Cx, uint8_t addr, uint8_t aScale, uint
         MPU6050_writeAccFullScaleRange(I2Cx, aScale);
         MPU6050_writeGyroFullScaleRange(I2Cx, gScale);
 
+        char msg[50];
+        sprintf(msg, "WHO_AM_I 1= 0x%X\r\n", check);
+        HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+
         return 1;
     }
     else
     {
+    	char msg[50];
+    	sprintf(msg, "WHO_AM_I 0= 0x%X\r\n", check);
+    	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
         return 0;
     }
 }
@@ -169,6 +181,10 @@ void MPU6050_calibrateGyro(I2C_HandleTypeDef *I2Cx, uint16_t numCalPoints)
     gyroCal.x = (float)x / (float)numCalPoints;
     gyroCal.y = (float)y / (float)numCalPoints;
     gyroCal.z = (float)z / (float)numCalPoints;
+
+    attitude.r = 0.0f;
+    attitude.p = 0.0f;
+    attitude.y = 0.0f;
 }
 
 /// @brief Calculate the real world sensor values.
