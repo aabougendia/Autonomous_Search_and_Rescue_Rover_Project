@@ -48,11 +48,11 @@ typedef enum {
 } THM_State;
 
 
-extern ManualState Manual_state;
-extern THM_State thm_hum_state;
+// extern ManualState Manual_state;
+// extern THM_State thm_hum_state;
 // extern PIR_OUT pir_state;
-extern AutoState auto_stat;
-extern ControlState ctrl_stat;
+// extern AutoState auto_stat;
+// extern ControlState ctrl_stat;
 
 // void Set_Man_Stat(ManualState state);
 // void Set_THM_HUM(THM_State state);
@@ -62,6 +62,7 @@ extern ControlState ctrl_stat;
 
 void Set_THM_HUM(THM_State state);
 void Set_Ctrl_State(ControlState state);
+void Set_Manual_State(ManualState state);
 // PIR_OUT Get_PIR();
 AutoState Get_Auto_State();
 void Set_ESP_ACK();

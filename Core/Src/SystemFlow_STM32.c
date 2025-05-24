@@ -11,12 +11,15 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
+#define ROVER_SPEED 400
+
+
 char GPS_GoogleMapsLink[150];
 PIR_OUT pir_state;
 THM_State thm_state;
 
 
-ControlState control_state = STATE_AUTO;
+ControlState control_state = STATE_MANUAL;
 AutoState sys_auto_state = RECONNING;
 ManualState sys_manual_state = DRV_STOP;
 
@@ -41,11 +44,13 @@ void SystemFlow_Init(){
     Servo_SetAngle(90);
     GPS_Init();
     Ultrasonic_Init();
+
     Stepper_Init();
 //    CommBus_Init(&huart3);
 }
 void SystemFlow_Run(){
 
+	HAL_UART_Transmit(&huart2, (uint8_t*)"start run\r\n", strlen("start run\r\n"), HAL_MAX_DELAY);
     if(control_state == STATE_AUTO) {
 
         switch (sys_auto_state) {
@@ -58,17 +63,19 @@ void SystemFlow_Run(){
             case IDLE:
                 Handle_AutoState_Idle();
         }
-
         Set_Auto_State(sys_auto_state);
+        HAL_Delay(100);
     }
     else if(control_state == STATE_MANUAL){
-
+    	HAL_UART_Transmit(&huart2, (uint8_t*)"start manual\r\n", strlen("start manual\r\n"), HAL_MAX_DELAY);
     	sys_manual_state = Get_Man_Stat();
         switch (sys_manual_state) {
             case DRV_STOP:
+            	HAL_UART_Transmit(&huart2, (uint8_t*)"stop\r\n", strlen("stop\r\n"), HAL_MAX_DELAY);
                 Handle_ManualState_DRV_STOP();
                 break;
             case DRV_FWD:
+            	HAL_UART_Transmit(&huart2, (uint8_t*)"forward\r\n", strlen("forward\r\n"), HAL_MAX_DELAY);
                 Handle_ManualState_DRV_FWD();
                 break;
             case DRV_BWD:
@@ -89,9 +96,11 @@ void SystemFlow_Run(){
             case CAM_LEFT:
                 Handle_ManualState_CAM_LEFT();
                 break;
+
         }
+        HAL_Delay(20);
     }
-    HAL_Delay(100);
+
 
 }
 
@@ -209,20 +218,23 @@ static void Handle_AutoState_Idle(void){
 
 /**************   Manual States  ****************/
 
-static void Handle_ManualState_DRV_STOP(void){
 
+
+static void Handle_ManualState_DRV_STOP(void){
+	Stepper_Stop();
 }
 static void Handle_ManualState_DRV_FWD(void){
-
+	HAL_UART_Transmit(&huart2, (uint8_t*)"stepper fwd\r\n", strlen("stepper fwd\r\n"), HAL_MAX_DELAY);
+	Stepper_MoveForward(ROVER_SPEED);
 }
 static void Handle_ManualState_DRV_BWD(void){
-
+	Stepper_MoveBackward(ROVER_SPEED);
 }
 static void Handle_ManualState_DRV_RIGHT(void){
-
+	Stepper_TurnRight(ROVER_SPEED);
 }
 static void Handle_ManualState_DRV_LEFT(void){
-
+	Stepper_TurnLeft(ROVER_SPEED);
 }
 
 static void Handle_ManualState_CAM_STOP(void){

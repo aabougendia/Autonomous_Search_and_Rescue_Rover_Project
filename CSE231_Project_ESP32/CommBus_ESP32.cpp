@@ -2,11 +2,11 @@
 #include "CommBus_ESP32.h"
 
 // Global variables (definition)
-ManualState Manual_state = DRV_STOP;
-THM_State thm_hum_state = THM_HUM_NOT_DETECTED;
+// ManualState Manual_state = DRV_STOP;
+// THM_State thm_hum_state = THM_HUM_NOT_DETECTED;
 // PIR_OUT pir_state = PIR_NO_MOTION;
-AutoState auto_stat = IDLE;
-ControlState ctrl_stat = STATE_MANUAL;
+// AutoState auto_stat = IDLE;
+// ControlState ctrl_stat = STATE_MANUAL;
 
 
 
@@ -25,7 +25,6 @@ void CommBus_Init() {
 }
 
 void Set_Man_Stat(ManualState state) {
-    Manual_state = state;  // Update global state
     switch (state) {
         case DRV_STOP:
             digitalWrite(COMM_MAN0_AUTO_ACK_PIN, LOW);
@@ -76,12 +75,10 @@ void Set_Man_Stat(ManualState state) {
 }
 
 void Set_THM_HUM(THM_State state) {
-    thm_hum_state = state;  // Update global state
     digitalWrite(COMM_HUM_FLAG_PIN, state == THM_HUM_DETECTED ? HIGH : LOW);
 }
 
 void Set_Ctrl_State(ControlState state) {
-    ctrl_stat = state;
     digitalWrite(COMM_AUTOMAN_STATE_PIN, state == STATE_MANUAL ? HIGH : LOW);
 }
 
@@ -99,8 +96,17 @@ AutoState Get_Auto_State() {
     int state_value = (auto1 << 1) | auto0;
     
     // Cast to AutoState enum
-    auto_stat = (AutoState)state_value;
-    return auto_stat;
+    return (AutoState)state_value;
+}
+void Set_Manual_State(ManualState state){
+    uint8_t b0 = state & (1 << 0);
+    uint8_t b1 = state & (1 << 1);
+    uint8_t b2 = state & (1 << 2);
+
+    digitalWrite(COMM_MAN0_AUTO_ACK_PIN, b0);
+    digitalWrite(COMM_MAN1_PIN, b1);
+    digitalWrite(COMM_MAN2_PIN, b2);
+
 }
 
 void Set_ESP_ACK(){

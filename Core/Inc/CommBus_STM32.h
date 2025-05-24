@@ -64,6 +64,7 @@ ManualState Get_Man_Stat();
 THM_State Get_THM_HUM();
 void Set_PIR(PIR_OUT state);
 void Set_Auto_State(AutoState state);
+ManualState Get_Manual_State();
 uint8_t Get_ESP_ACK();
 void Set_STM_ACK();
 void Clear_STM_ACK();

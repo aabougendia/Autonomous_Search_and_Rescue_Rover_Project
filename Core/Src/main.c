@@ -136,7 +136,7 @@ int main(void)
 //  CommBus_Init(&huart3);
 
 
-
+//  HAL_UART_Transmit(&huart2, (uint8_t*)"start main\r\n", strlen("start main\r\n"), HAL_MAX_DELAY);
   SystemFlow_Init();
 
   /***********************  MPU test   **********************/
@@ -169,7 +169,7 @@ int main(void)
 	  /********************  servo test   **********************/
 //	  Servo_SetAngle(0);
 //	  HAL_Delay(3000);
-	  Servo_SetAngle(90);
+//	  Servo_SetAngle(90);
 //	  HAL_Delay(3000);
 //	  Servo_SetAngle(180);
 //	  HAL_Delay(3000);
@@ -351,7 +351,7 @@ int main(void)
 
 	  /***************   system flow test  ********************/
 //	  LOG_UART("in main\r\n");
-//	  SystemFlow_Run();
+	  SystemFlow_Run();
 
 
 

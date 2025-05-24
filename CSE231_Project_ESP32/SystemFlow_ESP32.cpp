@@ -4,15 +4,20 @@
 #include "CommBus_ESP32.h"
 #include "AMG8833.h"
 #include "PIR_sensor.h"
+#include "ManualControl.h"
 
 String GPS_GoogleMapsLink;
 uint8_t pir_state = PIR_NO_MOTION;
 AMG8833 thermalSensor;
 float temperatureData[64];
 
-ControlState control_state = STATE_AUTO;
+// WebServer server(80);
+
+
+ControlState control_state = STATE_MANUAL;
 AutoState sys_auto_state = RECONNING;
-ManualState sys_manual_state = DRV_STOP;
+
+// ManualState sys_manual_state = DRV_STOP;
 
 static void Handle_AutoState_Reconning(void);
 static void Handle_AutoState_SendInfo(void);
@@ -34,6 +39,7 @@ void SystemFlow_Init(){
     PIR_Init();
     Serial2.begin(115200, SERIAL_8N1, 16, 17);
     Serial.begin(115200);
+    Drive_Init();
 
     if (!thermalSensor.begin()) {
         Serial.println("Sensor not found!");
@@ -42,7 +48,7 @@ void SystemFlow_Init(){
 
 }
 void SystemFlow_Run(){
-
+    Serial.println("start run");
     
     if(control_state == STATE_AUTO) {
         sys_auto_state = Get_Auto_State();
@@ -56,37 +62,45 @@ void SystemFlow_Run(){
             case IDLE:
                 Handle_AutoState_Idle();
         }
+        delay(100);
     }
     else if(control_state == STATE_MANUAL){
+        Serial.println("start manual");
+        server.handleClient();
+        
+    switch (man_state) {
+    case DRV_STOP:
+      Serial.println("DRV_STOP");
+      break;
+    case DRV_FWD:
+      Serial.println("DRV_FWD");
+      break;
+    case DRV_BWD:
+      Serial.println("DRV_BWD");
+      break;
+    case DRV_RIGHT:
+      Serial.println("DRV_RIGHT");
+      break;
+    case DRV_LEFT:
+      Serial.println("DRV_LEFT");
+      break;
+    case CAM_STOP:
+      Serial.println("CAM_STOP");
+      break;
+    case CAM_RIGHT:
+      Serial.println("CAM_RIGHT");
+      break;
+    case CAM_LEFT:
+      Serial.println("CAM_LEFT");
+      break;
+    default:
+      Serial.println("UNKNOWN");
+      break;
+  }
+        Set_Manual_State(man_state);
 
-        switch (sys_manual_state) {
-            case DRV_STOP:
-                Handle_ManualState_DRV_STOP();
-                break;
-            case DRV_FWD:
-                Handle_ManualState_DRV_FWD();
-                break;
-            case DRV_BWD:
-                Handle_ManualState_DRV_BWD();
-                break;
-            case DRV_RIGHT:
-                Handle_ManualState_DRV_RIGHT();
-                break;
-            case DRV_LEFT:
-                Handle_ManualState_DRV_LEFT();
-                break;
-            case CAM_STOP:
-                Handle_ManualState_CAM_STOP();
-                break;
-            case CAM_RIGHT:
-                Handle_ManualState_CAM_RIGHT();
-                break;
-            case CAM_LEFT:
-                Handle_ManualState_CAM_LEFT();
-                break;
-        }
     }
-    delay(100);
+    
 }
 
 static void Handle_AutoState_Reconning(void){
@@ -158,7 +172,6 @@ static void Handle_AutoState_Idle(void){
 }
 
 static void Handle_ManualState_DRV_STOP(void){
-
 }
 static void Handle_ManualState_DRV_FWD(void){
 
