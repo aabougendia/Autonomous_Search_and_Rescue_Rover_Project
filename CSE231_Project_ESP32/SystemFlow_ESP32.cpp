@@ -1,5 +1,5 @@
 #include "esp32-hal.h"
-#include <string>
+#include <Arduino.h>
 #include "SystemFlow_ESP32.h"
 #include "CommBus_ESP32.h"
 #include "AMG8833.h"
@@ -7,7 +7,7 @@
 #include "ManualControl.h"
 
 #define LED_BUILTIN 2
-#define PHONE_NUMBER "+201283600006" // Replace with your phone number
+#define PHONE_NUMBER "+201283600006" // Ensure correct country code
 
 String GPS_GoogleMapsLink;
 uint8_t pir_state = PIR_NO_MOTION;
@@ -16,17 +16,18 @@ float temperatureData[64];
 
 // WebServer server(80);
 
-ControlState control_state = STATE_MANUAL;
+ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
 
-// ManualState sys_manual_state = DRV_STOP;
+ManualState sys_manual_state = DRV_STOP;
 
 // GSM function declarations
 static void initGSM();
 static bool sendSMS(const String& message);
-static bool sendAT(const String& command, unsigned long timeout); // Removed default argument
+static bool sendAT(const String& command, unsigned long timeout);
 static String readSIM800Response(unsigned long timeout);
 static void log(const String& msg);
+static String extractCoordinates(const String& url); // New helper function
 
 // Existing function declarations
 static void Handle_AutoState_Reconning();
@@ -61,7 +62,7 @@ void SystemFlow_Init() {
 
 void SystemFlow_Run() {
     Serial.println("start run");
-
+    
     if (control_state == STATE_AUTO) {
         sys_auto_state = Get_Auto_State();
         switch (sys_auto_state) {
@@ -80,7 +81,7 @@ void SystemFlow_Run() {
     else if (control_state == STATE_MANUAL) {
         Serial.println("start manual");
         server.handleClient();
-
+        
         switch (man_state) {
             case DRV_STOP:
                 Serial.println("DRV_STOP");
@@ -141,8 +142,17 @@ static void Handle_AutoState_SendInfo() {
 
         Serial.println("info received\n");
 
-        String message = "GPS: " + GPS_GoogleMapsLink + "\nPIR: " + (pir_state ? "1" : "0");
-        log("Sending SMS with GPS and PIR data...");
+        // Construct message with state and coordinates
+        String coordinates = extractCoordinates(GPS_GoogleMapsLink);
+        String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation Coordinates: " + coordinates;
+        log("Message length: " + String(message.length()));
+        if (message.length() > 160) {
+            log("Message too long, truncating to 160 chars.");
+            message = message.substring(0, 160);
+        }
+
+        log("Sending SMS with state and coordinates...");
         if (sendSMS(message)) {
             log("SMS sent successfully.");
             digitalWrite(LED_BUILTIN, HIGH);
@@ -164,27 +174,45 @@ static void Handle_AutoState_Idle() {
 }
 
 static void initGSM() {
+    Serial1.begin(9600, SERIAL_8N1, 12, 13);
+    delay(10000); // Wait for GSM module to boot
     log("Sending basic AT test...");
     if (!sendAT("AT", 1000)) {
         log("Error: GSM module not responding to AT");
         return;
     }
-
+    
     log("Checking SIM status...");
+    String simStatus = readSIM800Response(1000);
     sendAT("AT+CPIN?", 1000);
-
+    if (simStatus.indexOf("+CPIN: READY") == -1) {
+        log("SIM card not ready!");
+        return;
+    }
+    
     log("Checking signal quality...");
     sendAT("AT+CSQ", 1000);
-
+    
     log("Getting SIM card info...");
     sendAT("AT+CCID", 1000);
-
+    
     log("Checking network registration...");
+    String regStatus = readSIM800Response(1000);
     sendAT("AT+CREG?", 1000);
-
+    if (regStatus.indexOf("+CREG: 0,1") == -1 && regStatus.indexOf("+CREG: 0,5") == -1) {
+        log("Not registered with network!");
+        return;
+    }
+    
     log("Setting SMS text mode...");
     sendAT("AT+CMGF=1", 1000);
-
+    
+    log("Checking SMSC...");
+    sendAT("AT+CSCA?", 1000); // Verify SMSC number
+    
+    log("Enabling delivery reports...");
+    sendAT("AT+CNMI=2,2,0,0,0", 1000);
+    
     log("GSM module initialization complete.");
 }
 
@@ -250,6 +278,24 @@ static void log(const String& msg) {
     Serial.print(millis());
     Serial.print("ms] ");
     Serial.println(msg);
+}
+
+static String extractCoordinates(const String& url) {
+    // Expecting URL format: https://www.google.com/maps?q=latitude,longitude
+    int startIndex = url.indexOf("?q=");
+    if (startIndex == -1) {
+        log("Invalid GPS URL format.");
+        return "Unknown";
+    }
+    startIndex += 3; // Skip "?q="
+    int endIndex = url.indexOf(",", startIndex);
+    if (endIndex == -1) {
+        log("Invalid GPS coordinates format.");
+        return "Unknown";
+    }
+    String latitude = url.substring(startIndex, endIndex);
+    String longitude = url.substring(endIndex + 1);
+    return latitude + "," + longitude;
 }
 
 static void Handle_ManualState_DRV_STOP() {}
