@@ -7,7 +7,7 @@
 #include "ManualControl.h"
 
 #define LED_BUILTIN 2
-#define PHONE_NUMBER "+201283600006" // FOUAD HASHESH NUMBER
+#define PHONE_NUMBER "+201283600006" // Replace with your phone number
 
 String GPS_GoogleMapsLink;
 uint8_t pir_state = PIR_NO_MOTION;
@@ -24,24 +24,22 @@ AutoState sys_auto_state = RECONNING;
 // GSM function declarations
 static void initGSM();
 static bool sendSMS(const String& message);
-static bool sendAT(const String& command, unsigned long timeout = 1000);
+static bool sendAT(const String& command, unsigned long timeout); // Removed default argument
 static String readSIM800Response(unsigned long timeout);
 static void log(const String& msg);
 
 // Existing function declarations
-static void Handle_AutoState_Reconning(void);
-static void Handle_AutoState_SendInfo(void);
-static void Handle_AutoState_Idle(void);
-
-static void Handle_ManualState_DRV_STOP(void);
-static void Handle_ManualState_DRV_FWD(void);
-static void Handle_ManualState_DRV_BWD(void);
-static void Handle_ManualState_DRV_RIGHT(void);
-static void Handle_ManualState_DRV_LEFT(void);
-
-static void Handle_ManualState_CAM_STOP(void);
-static void Handle_ManualState_CAM_RIGHT(void);
-static void Handle_ManualState_CAM_LEFT(void);
+static void Handle_AutoState_Reconning();
+static void Handle_AutoState_SendInfo();
+static void Handle_AutoState_Idle();
+static void Handle_ManualState_DRV_STOP();
+static void Handle_ManualState_DRV_FWD();
+static void Handle_ManualState_DRV_BWD();
+static void Handle_ManualState_DRV_RIGHT();
+static void Handle_ManualState_DRV_LEFT();
+static void Handle_ManualState_CAM_STOP();
+static void Handle_ManualState_CAM_RIGHT();
+static void Handle_ManualState_CAM_LEFT();
 
 void SystemFlow_Init() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -116,7 +114,7 @@ void SystemFlow_Run() {
     }
 }
 
-static void Handle_AutoState_Reconning(void) {
+static void Handle_AutoState_Reconning() {
     Serial.println("AUTO 0 : RECONNING");
 
     if (thermalSensor.detectHumanRelative()) {
@@ -128,7 +126,7 @@ static void Handle_AutoState_Reconning(void) {
     }
 }
 
-static void Handle_AutoState_SendInfo(void) {
+static void Handle_AutoState_SendInfo() {
     Serial.println("AUTO 1 : SEND INFO");
 
     String ReceivedGoogleMapsLink = Get_GPSLink();
@@ -143,7 +141,6 @@ static void Handle_AutoState_SendInfo(void) {
 
         Serial.println("info received\n");
 
-        // Prepare SMS message
         String message = "GPS: " + GPS_GoogleMapsLink + "\nPIR: " + (pir_state ? "1" : "0");
         log("Sending SMS with GPS and PIR data...");
         if (sendSMS(message)) {
@@ -161,12 +158,11 @@ static void Handle_AutoState_SendInfo(void) {
     delay(500);
 }
 
-static void Handle_AutoState_Idle(void) {
+static void Handle_AutoState_Idle() {
     Serial.println("AUTO 2 : IDLE");
     Clear_ESP_ACK();
 }
 
-// GSM functions from miniGSM.ino
 static void initGSM() {
     log("Sending basic AT test...");
     if (!sendAT("AT", 1000)) {
@@ -256,12 +252,11 @@ static void log(const String& msg) {
     Serial.println(msg);
 }
 
-// Manual state handlers (unchanged)
-static void Handle_ManualState_DRV_STOP(void) {}
-static void Handle_ManualState_DRV_FWD(void) {}
-static void Handle_ManualState_DRV_BWD(void) {}
-static void Handle_ManualState_DRV_RIGHT(void) {}
-static void Handle_ManualState_DRV_LEFT(void) {}
-static void Handle_ManualState_CAM_STOP(void) {}
-static void Handle_ManualState_CAM_RIGHT(void) {}
-static void Handle_ManualState_CAM_LEFT(void) {}
+static void Handle_ManualState_DRV_STOP() {}
+static void Handle_ManualState_DRV_FWD() {}
+static void Handle_ManualState_DRV_BWD() {}
+static void Handle_ManualState_DRV_RIGHT() {}
+static void Handle_ManualState_DRV_LEFT() {}
+static void Handle_ManualState_CAM_STOP() {}
+static void Handle_ManualState_CAM_RIGHT() {}
+static void Handle_ManualState_CAM_LEFT() {}
