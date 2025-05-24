@@ -187,8 +187,6 @@ char* GPS_getLocation() {
 
 char* GPS_getGoogleMapsLink() {
 
-	Debug_Print_Buffer();
-
 	HAL_UART_Transmit(&huart2, (uint8_t*)"CHECK GGA\r\n", strlen("CHECK GGA\r\n"), HAL_MAX_DELAY);
     if (Get_latest_sentence("$GPGGA", GGA)) {
     	HAL_UART_Transmit(&huart2, (uint8_t*)"GGA FOUND\r\n", strlen("GGA FOUND\r\n"), HAL_MAX_DELAY);
@@ -212,10 +210,10 @@ char* GPS_getGoogleMapsLink() {
         if (gpsData.ggastruct.lcation.NS == 'S') lat = -lat;
         if (gpsData.ggastruct.lcation.EW == 'W') lon = -lon;
 
-        sprintf(mapsBuffer, "https://www.google.com/maps?q=%.8f,%.8f", lat, lon);
+        sprintf(mapsBuffer, "www.google.com/maps?q=%.8f,%.8f", lat, lon);
     } else if ((flagGGA == 1) || (flagRMC == 1)) {
 //        strcpy(mapsBuffer, "No Signal\r\n");
-    	strcpy(mapsBuffer, "https://www.google.com/maps?q=30.02257390, 31.70795646");
+    	strcpy(mapsBuffer, "www.google.com/maps?q=30.02257390,31.70795646");
     } else {
         strcpy(mapsBuffer, "Error\r\n");
 //    	strcpy(mapsBuffer, "https://www.google.com/maps?q=30.02257390, 31.70795646");

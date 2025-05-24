@@ -7,7 +7,7 @@
 #include "ManualControl.h"
 
 #define LED_BUILTIN 2
-#define PHONE_NUMBER "+201283600006" // Ensure correct country code
+#define PHONE_NUMBER "+201026362660" // Ensure correct country code
 
 String GPS_GoogleMapsLink;
 uint8_t pir_state = PIR_NO_MOTION;
@@ -27,7 +27,7 @@ static bool sendSMS(const String& message);
 static bool sendAT(const String& command, unsigned long timeout);
 static String readSIM800Response(unsigned long timeout);
 static void log(const String& msg);
-static String extractCoordinates(const String& url); // Kept but unused
+static String extractCoordinates(const String& url); // New helper function
 
 // Existing function declarations
 static void Handle_AutoState_Reconning();
@@ -65,7 +65,6 @@ void SystemFlow_Run() {
 
     if (control_state == STATE_AUTO) {
         sys_auto_state = Get_Auto_State();
-        Serial.println("Current Auto State: " + String(sys_auto_state)); // Debug state
         switch (sys_auto_state) {
             case RECONNING:
                 Handle_AutoState_Reconning();
@@ -132,11 +131,9 @@ static void Handle_AutoState_SendInfo() {
     Serial.println("AUTO 1 : SEND INFO");
 
     String ReceivedGoogleMapsLink = Get_GPSLink();
-    log("GPS Link from Get_GPSLink: " + ReceivedGoogleMapsLink); // Debug GPS link
     if (ReceivedGoogleMapsLink != "") {
         GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
 
-        // Truncate at second "www" to prevent URL repetition
         int firstWww = GPS_GoogleMapsLink.indexOf("www");
         if (firstWww != -1) {
             int secondWww = GPS_GoogleMapsLink.indexOf("www", firstWww + 3);
@@ -156,16 +153,17 @@ static void Handle_AutoState_SendInfo() {
 
         Serial.println("info received\n");
 
-        // Construct message with state and full GPS link
+        // Construct message with state and coordinates
+        String cc = extractCoordinates(GPS_GoogleMapsLink);
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
-        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + cc;
         log("Message length: " + String(message.length()));
         if (message.length() > 160) {
             log("Message too long, truncating to 160 chars.");
             message = message.substring(0, 160);
         }
 
-        log("Sending SMS with state and location...");
+        log("Sending SMS with state and coordinates...");
         if (sendSMS(message)) {
             log("SMS sent successfully.");
             digitalWrite(LED_BUILTIN, HIGH);
@@ -176,8 +174,6 @@ static void Handle_AutoState_SendInfo() {
 
         GPS_GoogleMapsLink = "";
         pir_state = PIR_NO_MOTION;
-    } else {
-        log("No valid GPS link received, skipping SMS.");
     }
 
     delay(500);
@@ -232,66 +228,36 @@ static void initGSM() {
 }
 
 static bool sendSMS(const String& message) {
-    // Retry up to 3 times to handle GSM module issues
-    const int maxRetries = 3;
-    for (int retry = 0; retry < maxRetries; retry++) {
-        // Clear UART buffer
-        while (Serial1.available()) {
-            Serial1.read();
-        }
-
-        // Check network registration
-        log("Checking network registration (attempt " + String(retry + 1) + ")...");
-        sendAT("AT+CREG?", 1000);
-        String regStatus = readSIM800Response(1000);
-        if (regStatus.indexOf("+CREG: 0,1") == -1 && regStatus.indexOf("+CREG: 0,5") == -1) {
-            log("Not registered with network, reinitializing GSM...");
-            initGSM(); // Reinitialize GSM module
-            continue;
-        }
-
-        log("Setting SMS text mode before sending (attempt " + String(retry + 1) + ")...");
-        if (!sendAT("AT+CMGF=1", 1000)) {
-            log("Failed to set SMS text mode.");
-            continue;
-        }
-
-        String cmd = "AT+CMGS=\"" + String(PHONE_NUMBER) + "\"";
-        log("Sending SMS command: " + cmd);
-        if (!sendAT(cmd, 3000)) {
-            log("Failed to initiate SMS send.");
-            continue;
-        }
-
-        log("Sending message body...");
-        Serial1.print(message);
-        delay(100);
-        log("Sending Ctrl+Z to finish message...");
-        Serial1.write(26); // Ctrl+Z
-        delay(5000);
-
-        log("Waiting for SMS send confirmation...");
-        String resp = readSIM800Response(5000);
-        log("SMS send response: " + resp);
-
-        bool success = resp.indexOf("OK") != -1 && resp.indexOf("+CMGS") != -1;
-        if (success) {
-            log("SMS send successful.");
-            return true;
-        } else {
-            log("SMS send failed, retrying...");
-        }
+    log("Setting SMS text mode before sending...");
+    if (!sendAT("AT+CMGF=1", 1000)) {
+        log("Failed to set SMS text mode.");
+        return false;
     }
-    log("SMS send failed after " + String(maxRetries) + " retries.");
-    return false;
+
+    String cmd = "AT+CMGS=\"" + String(PHONE_NUMBER) + "\"";
+    log("Sending SMS command: " + cmd);
+    if (!sendAT(cmd, 3000)) {
+        log("Failed to initiate SMS send.");
+        return false;
+    }
+
+    log("Sending message body...");
+    Serial1.print(message);
+    delay(100);
+    log("Sending Ctrl+Z to finish message...");
+    Serial1.write(26); // Ctrl+Z
+    delay(5000);
+
+    log("Waiting for SMS send confirmation...");
+    String resp = readSIM800Response(5000);
+    log("SMS send response: " + resp);
+
+    bool success = resp.indexOf("OK") != -1 || resp.indexOf("+CMGS") != -1;
+    log(success ? "SMS send successful." : "SMS send failed.");
+    return success;
 }
 
 static bool sendAT(const String& command, unsigned long timeout) {
-    // Clear UART buffer before sending command
-    while (Serial1.available()) {
-        Serial1.read();
-    }
-
     Serial1.println(command);
     log("Sent command: " + command);
     String response = readSIM800Response(timeout);
@@ -310,7 +276,6 @@ static String readSIM800Response(unsigned long timeout) {
             char c = Serial1.read();
             response += c;
         }
-        delay(10); // Small delay to allow buffer to fill
     }
     response.trim();
     if (response.length() == 0) {
@@ -326,7 +291,6 @@ static void log(const String& msg) {
     Serial.println(msg);
 }
 
-// NOT USED
 static String extractCoordinates(const String& url) {
     // Expecting URL format: https://www.google.com/maps?q=latitude,longitude
     int startIndex = url.indexOf("?q=");

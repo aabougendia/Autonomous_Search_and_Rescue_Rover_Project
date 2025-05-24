@@ -19,7 +19,7 @@ PIR_OUT pir_state;
 THM_State thm_state;
 
 
-ControlState control_state = STATE_MANUAL;
+ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
 ManualState sys_manual_state = DRV_STOP;
 
