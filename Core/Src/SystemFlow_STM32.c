@@ -1,3 +1,4 @@
+
 #include "SystemFlow_STM32.h"
 
 
@@ -90,6 +91,7 @@ void SystemFlow_Run(){
                 break;
         }
     }
+    HAL_Delay(100);
 
 }
 
@@ -157,35 +159,51 @@ static void Handle_AutoState_SendInfo(void){
 	HAL_UART_Transmit(&huart2, (uint8_t*)GPS_GoogleMapsLink, strlen(GPS_GoogleMapsLink), HAL_MAX_DELAY);
 	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
 
-	uint8_t trial = 200;
-	while(trial--){
-		pir_state |= PIR_Read();
-	}
-
-	if(pir_state == PIR_MOTION_DETECTED){
-		HAL_UART_Transmit(&huart2, (uint8_t*)"MOTION\r\n", strlen("MOTION\r\n"), HAL_MAX_DELAY);
-	}
-	else {
-		HAL_UART_Transmit(&huart2, (uint8_t*)"NO MOTION\r\n", strlen("NO MOTION\r\n"), HAL_MAX_DELAY);
-	}
-
-	while(Get_ESP_ACK() == GPIO_PIN_RESET);
-
-
 	Send_GPSLink(GPS_GoogleMapsLink);
-	HAL_Delay(10);
-	Set_PIR(pir_state);
+	HAL_Delay(2000);
+//	uint32_t start_time = HAL_GetTick();  // Start time in ms
+//	pir_state = 0;
+//
+//	while ((HAL_GetTick() - start_time) < 5000) {  // Run for 5000ms = 5s
+//	    pir_state |= PIR_Read();   // Read PIR sensor
+//	}
 
-	Set_STM_ACK();
+//	HAL_Delay(10);
+//	Set_PIR(pir_state);
+//
+//	while(Get_ESP_ACK() == GPIO_PIN_RESET);
+//
+//	if(pir_state == PIR_MOTION_DETECTED){
+//		HAL_UART_Transmit(&huart2, (uint8_t*)"MOTION\r\n", strlen("MOTION\r\n"), HAL_MAX_DELAY);
+//	}
+//	else {
+//		HAL_UART_Transmit(&huart2, (uint8_t*)"NO MOTION\r\n", strlen("NO MOTION\r\n"), HAL_MAX_DELAY);
+//	}
 
-	while(Get_ESP_ACK() == GPIO_PIN_SET);
+//	while(Get_ESP_ACK() == GPIO_PIN_RESET){
+//	}
 
-	Clear_STM_ACK();
+
+//	Send_GPSLink(GPS_GoogleMapsLink);
+//	HAL_Delay(10);
+//	Set_PIR(pir_state);
+
+//	Set_STM_ACK();
+
+//	while(Get_ESP_ACK() == GPIO_PIN_SET);
+
+//	Clear_STM_ACK();
+
+	sys_auto_state = IDLE;
 
 }
 
 static void Handle_AutoState_Idle(void){
 	LOG_UART("AUTO STATE 2: IDLE");
+
+	HAL_Delay(1000);
+
+	sys_auto_state = RECONNING;
 }
 
 

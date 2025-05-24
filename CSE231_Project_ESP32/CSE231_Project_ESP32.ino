@@ -3,7 +3,7 @@
 #include "AMG8833.h"
 
 #include "SystemFlow_ESP32.h"
-
+#include "PIR_sensor.h"
 // CommBus comm(Serial2);
 
 
@@ -25,8 +25,9 @@ void setup() {
   //   Serial.println("Sensor not found!");
   //   while (true);
   // }
-  // Serial.println("in main setup\n");
+  Serial.println("in main setup\n");
   SystemFlow_Init();
+  // PIR_Init();
 
 
 }
@@ -81,6 +82,11 @@ void loop() {
   // Serial.println("in system loop\n");
   SystemFlow_Run();
 
+  // if(PIR_Read()){
+    // Serial.println("1");
+  // }
+  // else
+    // Serial.println("0");
 
 
 }

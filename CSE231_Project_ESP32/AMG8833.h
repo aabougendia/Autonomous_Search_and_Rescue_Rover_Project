@@ -12,7 +12,7 @@ public:
 
     // Detection APIs
     bool detectHuman(float minTemp = 26.0, int minClusterSize = 4);
-    bool detectHumanRelative(float delta = 1.85, int minClusterSize = 4);
+    bool detectHumanRelative(float delta = 1.2, int minClusterSize = 3);
 
     // Stats
     float getMaxTemperature();

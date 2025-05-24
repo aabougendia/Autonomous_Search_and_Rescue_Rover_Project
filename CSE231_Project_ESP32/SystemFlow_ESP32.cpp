@@ -1,10 +1,12 @@
+#include "esp32-hal.h"
 #include <string>
 #include "SystemFlow_ESP32.h"
 #include "CommBus_ESP32.h"
 #include "AMG8833.h"
+#include "PIR_sensor.h"
 
 String GPS_GoogleMapsLink;
-
+uint8_t pir_state = PIR_NO_MOTION;
 AMG8833 thermalSensor;
 float temperatureData[64];
 
@@ -29,11 +31,12 @@ static void Handle_ManualState_CAM_LEFT(void);
 void SystemFlow_Init(){
 
     CommBus_Init();
+    PIR_Init();
     Serial2.begin(115200, SERIAL_8N1, 16, 17);
     Serial.begin(115200);
 
     if (!thermalSensor.begin()) {
-    Serial.println("Sensor not found!");
+        Serial.println("Sensor not found!");
     while (true);
     }
 
@@ -83,6 +86,7 @@ void SystemFlow_Run(){
                 break;
         }
     }
+    delay(100);
 }
 
 static void Handle_AutoState_Reconning(void){
@@ -100,29 +104,57 @@ static void Handle_AutoState_Reconning(void){
 static void Handle_AutoState_SendInfo(void){
     Serial.println("AUTO 1 : SEND INFO");
 
-    Set_ESP_ACK();
+    // Set_ESP_ACK();
 
-    while(Get_STM_ACK() == LOW){
-        Serial.println("getting info\n");
-    }
-
-    GPS_GoogleMapsLink = Get_GPSLink();
-    pir_state = Get_PIR();
-
-    Serial.println("info received\n");
-
-    Clear_ESP_ACK();
-
-    // while(Get_STM_ACK() != LOW){
-    //     Serial.println("waiting for stm ack low\n");
+    // while(Get_STM_ACK() == LOW){
+    //     Serial.println("getting info\n");
     // }
 
+    String ReceivedGoogleMapsLink = Get_GPSLink();
+    if(ReceivedGoogleMapsLink != ""){
+        GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
+
+        // delay(2000);
+        unsigned long startTime = millis();
+
+        pir_state = 0;
+        while (millis() - startTime < 1000) {
+            pir_state |= PIR_Read();
+        }
+
+        Serial.println("info received\n");
+    }
+
+
+
+    // Clear_ESP_ACK();
+    // if(GPS_GoogleMapsLink != ""){
+        // Set_ESP_ACK();
+        // pir_state = Get_PIR();
+    // }
+
+    // // while(Get_STM_ACK() != LOW){
+    // //     Serial.println("waiting for stm ack low\n");
+    // // }
+
     Serial.println("GPS: " + GPS_GoogleMapsLink + "\n");
-    Serial.println("PIR: " + (pir_state == PIR_MOTION_DETECTED) ? "1" : "0");
+    if(pir_state)
+        Serial.println("PIR: 1\n");
+    else
+         Serial.println("PIR: 0\n");
+    delay(500);
+
+
+
+
+
+    GPS_GoogleMapsLink = "";
+    pir_state = PIR_NO_MOTION;
 }
 
 static void Handle_AutoState_Idle(void){
-
+    Serial.println("AUTO 2 : IDLE");
+    Clear_ESP_ACK();
 }
 
 static void Handle_ManualState_DRV_STOP(void){

@@ -47,14 +47,10 @@ typedef enum {
 	THM_HUM_DETECTED = 1
 } THM_State;
 
-typedef enum {
-	PIR_NO_MOTION = 0,
-	PIR_MOTION_DETECTED = 1
-} PIR_OUT;
 
 extern ManualState Manual_state;
 extern THM_State thm_hum_state;
-extern PIR_OUT pir_state;
+// extern PIR_OUT pir_state;
 extern AutoState auto_stat;
 extern ControlState ctrl_stat;
 
@@ -66,7 +62,7 @@ extern ControlState ctrl_stat;
 
 void Set_THM_HUM(THM_State state);
 void Set_Ctrl_State(ControlState state);
-PIR_OUT Get_PIR();
+// PIR_OUT Get_PIR();
 AutoState Get_Auto_State();
 void Set_ESP_ACK();
 void Clear_ESP_ACK();

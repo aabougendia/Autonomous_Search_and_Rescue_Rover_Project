@@ -4,7 +4,7 @@
 // Global variables (definition)
 ManualState Manual_state = DRV_STOP;
 THM_State thm_hum_state = THM_HUM_NOT_DETECTED;
-PIR_OUT pir_state = PIR_NO_MOTION;
+// PIR_OUT pir_state = PIR_NO_MOTION;
 AutoState auto_stat = IDLE;
 ControlState ctrl_stat = STATE_MANUAL;
 
@@ -18,7 +18,6 @@ void CommBus_Init() {
     pinMode(COMM_AUTO0_PIN, INPUT);
     pinMode(COMM_AUTO1_PIN, INPUT);
     pinMode(COMM_HUM_FLAG_PIN, OUTPUT);
-    pinMode(COMM_MOTION_FLAG_PIN, INPUT);
 
     pinMode(COMM_MAN0_AUTO_ACK_PIN, OUTPUT);
     pinMode(COMM_MAN1_PIN, OUTPUT);
@@ -86,11 +85,11 @@ void Set_Ctrl_State(ControlState state) {
     digitalWrite(COMM_AUTOMAN_STATE_PIN, state == STATE_MANUAL ? HIGH : LOW);
 }
 
-PIR_OUT Get_PIR() {
-    int reading = digitalRead(COMM_MOTION_FLAG_PIN);
-    pir_state = (reading == HIGH) ? PIR_MOTION_DETECTED : PIR_NO_MOTION;
-    return pir_state;
-}
+// PIR_OUT Get_PIR() {
+//     int reading = digitalRead(COMM_MOTION_FLAG_PIN);
+//     pir_state = (reading == HIGH) ? PIR_MOTION_DETECTED : PIR_NO_MOTION;
+//     return pir_state;
+// }
 
 AutoState Get_Auto_State() {
     int auto0 = digitalRead(COMM_AUTO0_PIN);

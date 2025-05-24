@@ -169,7 +169,7 @@ int main(void)
 	  /********************  servo test   **********************/
 //	  Servo_SetAngle(0);
 //	  HAL_Delay(3000);
-//	  Servo_SetAngle(90);
+	  Servo_SetAngle(90);
 //	  HAL_Delay(3000);
 //	  Servo_SetAngle(180);
 //	  HAL_Delay(3000);
@@ -351,7 +351,7 @@ int main(void)
 
 	  /***************   system flow test  ********************/
 //	  LOG_UART("in main\r\n");
-	  SystemFlow_Run();
+//	  SystemFlow_Run();
 
 
 
