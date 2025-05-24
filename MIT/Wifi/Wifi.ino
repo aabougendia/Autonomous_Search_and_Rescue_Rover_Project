@@ -1,4 +1,3 @@
-#include "ManualControl.h"
 #include <WiFi.h>
 #include <WebServer.h>
 
@@ -62,5 +61,4 @@ void setup() {
 void loop() {
   server.handleClient();
 }
-
 

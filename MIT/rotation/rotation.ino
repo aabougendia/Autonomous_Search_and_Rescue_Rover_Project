@@ -1,4 +1,3 @@
-#include "ManualControl.h"
 #include <WiFi.h>
 #include <WebServer.h>
 
@@ -63,4 +62,50 @@ void loop() {
   server.handleClient();
 }
 
+void handleServo() {
+  String dir = server.arg("dir");      // "left", "right", or "center"
+  String state = server.arg("state");  // "on" or "off"
 
+  // Turn off all direction LEDs first
+  digitalWrite(ledLeft, LOW);
+  digitalWrite(ledRight, LOW);
+  digitalWrite(ledCenter, LOW);
+
+  if (state == "on") {
+    if (dir == "left") {
+      digitalWrite(ledLeft, HIGH);
+      Serial.println("LEFT movement activated");
+    } 
+    else if (dir == "right") {
+      digitalWrite(ledRight, HIGH);
+      Serial.println("RIGHT movement activated");
+    }
+    else if (dir == "center") {
+      digitalWrite(ledCenter, HIGH);
+      Serial.println("CENTER position activated");
+    }
+  }
+  
+  server.send(200, "text/plain", "LEDs: " + dir + "=" + state);
+}
+
+
+//void handleServoo() {
+ // String dir = server.arg("dir");      // "left", "right", or "center"
+  //String state = server.arg("state");  // "on" or "off"
+
+  //if (state == "on") {
+  //  if (dir == "left") {
+   //   panServo.write(0);    // Full left
+   // } 
+    //else if (dir == "right") {
+    //  panServo.write(180);  // Full right
+    //}
+    //else if (dir == "center") {
+    //  panServo.write(90);   // Center position
+   // }
+ // } 
+  // state == "off" -> No action (servo stays at current position)
+  
+ // server.send(200, "text/plain", "Direction:" + dir + " State:" + state);
+//}
