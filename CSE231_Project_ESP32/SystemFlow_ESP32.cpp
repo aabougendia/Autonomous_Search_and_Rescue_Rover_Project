@@ -152,9 +152,10 @@ static void Handle_AutoState_SendInfo() {
         Serial.println("info received\n");
 
         // Construct message with state and coordinates
-        String coordinates = extractCoordinates(GPS_GoogleMapsLink);
+
+        //String coordinates = extractCoordinates(GPS_GoogleMapsLink);
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
-        String message = "HUMAN FOUND\nState: " + state + "\nLocation Coordinates: " + coordinates;
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
         log("Message length: " + String(message.length()));
         if (message.length() > 160) {
             log("Message too long, truncating to 160 chars.");
@@ -289,6 +290,7 @@ static void log(const String& msg) {
     Serial.println(msg);
 }
 
+// NOT USED
 static String extractCoordinates(const String& url) {
     // Expecting URL format: https://www.google.com/maps?q=latitude,longitude
     int startIndex = url.indexOf("?q=");
