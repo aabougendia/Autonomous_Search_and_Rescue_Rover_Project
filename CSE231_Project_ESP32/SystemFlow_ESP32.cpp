@@ -137,6 +137,16 @@ static void Handle_AutoState_SendInfo() {
             GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
         }
 
+        // Truncate at second "www" to prevent URL repetition
+        int firstWww = GPS_GoogleMapsLink.indexOf("www");
+        if (firstWww != -1) {
+            int secondWww = GPS_GoogleMapsLink.indexOf("www", firstWww + 3);
+            if (secondWww != -1) {
+                GPS_GoogleMapsLink = GPS_GoogleMapsLink.substring(0, secondWww);
+                log("Truncated GPS link at second 'www': " + GPS_GoogleMapsLink);
+            }
+        }
+
         unsigned long startTime = millis();
         pir_state = 0;
         while (millis() - startTime < 1000) {
@@ -149,10 +159,6 @@ static void Handle_AutoState_SendInfo() {
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
         String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
         log("Message length: " + String(message.length()));
-        if (message.length() > 160) {
-            log("Message too long, truncating to 160 chars.");
-            message = message.substring(0, 160);
-        }
 
         log("Sending SMS with state and location...");
         if (sendSMS(message)) {
