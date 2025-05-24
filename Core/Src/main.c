@@ -28,7 +28,7 @@
 #include "std_types.h"
 //#include "bit_math.h"
 
-#include "System_Flow.h"
+#include "SystemFlow_STM32.h"
 
 //#include "servo.h"
 //#include "GPS_Module.h"
@@ -135,19 +135,23 @@ int main(void)
 //  Stepper_Init();
 //  CommBus_Init(&huart3);
 
+
+
   SystemFlow_Init();
 
-  MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
-
-  char dbg[100];
-  sprintf(dbg, "aScale=%.2f gScale=%.2f dt=%.4f tau=%.2f\r\n", aScaleFactor, gScaleFactor, _dt, _tau);
-  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
-
-
-  MPU6050_calibrateGyro(&hi2c1, 1000);
-  printf("GyroCal Z = %.2f\r\n", gyroCal.z);
-  sprintf(dbg, "GyroCal Z = %.2f\r\n", gyroCal.z);
-  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
+  /***********************  MPU test   **********************/
+//
+//  MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
+//
+//  char dbg[100];
+//  sprintf(dbg, "aScale=%.2f gScale=%.2f dt=%.4f tau=%.2f\r\n", aScaleFactor, gScaleFactor, _dt, _tau);
+//  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
+//
+//
+//  MPU6050_calibrateGyro(&hi2c1, 1000);
+//  printf("GyroCal Z = %.2f\r\n", gyroCal.z);
+//  sprintf(dbg, "GyroCal Z = %.2f\r\n", gyroCal.z);
+//  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
 
   /* USER CODE END 2 */
 
@@ -347,24 +351,24 @@ int main(void)
 
 	  /***************   system flow test  ********************/
 //	  LOG_UART("in main\r\n");
-//	  SystemFlow_Run();
+	  SystemFlow_Run();
 
 
 
 	 /**************  MPU test  *******************/
 
-	  MPU6050_calcAttitude(&hi2c1);
-
-	  char buffer[50];  // Make sure the buffer is large enough
-
-	  sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-	  // Convert float to string
-	  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
-
-	  // Transmit over UART
-	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-	  HAL_Delay(200);
+//	  MPU6050_calcAttitude(&hi2c1);
+//
+//	  char buffer[50];  // Make sure the buffer is large enough
+//
+//	  sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+//	  // Convert float to string
+//	  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
+//
+//	  // Transmit over UART
+//	  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+//	  HAL_Delay(200);
 
 
 
@@ -765,46 +769,45 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, COMM_MOTION_FLAG_Pin|MOTOR_DIR1_Pin|MOTOR_EN1_Pin|MOTOR_DIR2_Pin
+                          |MOTOR_EN2_Pin|LED_B_Pin|LED_G_Pin|LED_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, MOTOR_DIR1_Pin|MOTOR_EN1_Pin|MOTOR_DIR2_Pin|MOTOR_EN2_Pin
-                          |LED_B_Pin|LED_G_Pin|LED_R_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, COMM_AUTO0_Pin|COMM_AUTO1_Pin|BUZZER_Pin|ULTRASONIC_TRIG_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, STATE0_Pin|STATE1_Pin|STATE2_Pin|BUZZER_Pin
-                          |ULTRASONIC_TRIG_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pin : PIR_OUTPUT_Pin */
+  GPIO_InitStruct.Pin = PIR_OUTPUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(PIR_OUTPUT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR_DIR1_Pin MOTOR_EN1_Pin MOTOR_DIR2_Pin MOTOR_EN2_Pin
-                           LED_B_Pin LED_G_Pin LED_R_Pin */
-  GPIO_InitStruct.Pin = MOTOR_DIR1_Pin|MOTOR_EN1_Pin|MOTOR_DIR2_Pin|MOTOR_EN2_Pin
-                          |LED_B_Pin|LED_G_Pin|LED_R_Pin;
+  /*Configure GPIO pins : COMM_MOTION_FLAG_Pin MOTOR_DIR1_Pin MOTOR_EN1_Pin MOTOR_DIR2_Pin
+                           MOTOR_EN2_Pin LED_B_Pin LED_G_Pin LED_R_Pin */
+  GPIO_InitStruct.Pin = COMM_MOTION_FLAG_Pin|MOTOR_DIR1_Pin|MOTOR_EN1_Pin|MOTOR_DIR2_Pin
+                          |MOTOR_EN2_Pin|LED_B_Pin|LED_G_Pin|LED_R_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PIR_SENSOR_Pin STATE_ACK_R_Pin STATE_ACK_S_Pin */
-  GPIO_InitStruct.Pin = PIR_SENSOR_Pin|STATE_ACK_R_Pin|STATE_ACK_S_Pin;
+  /*Configure GPIO pins : COMM_MAN0_AUTO_ACK_Pin COMM_MAN1_Pin COMM_AUTOMAN_STATE_Pin COMM_MAN2_Pin */
+  GPIO_InitStruct.Pin = COMM_MAN0_AUTO_ACK_Pin|COMM_MAN1_Pin|COMM_AUTOMAN_STATE_Pin|COMM_MAN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : STATE0_Pin STATE1_Pin STATE2_Pin BUZZER_Pin
-                           ULTRASONIC_TRIG_Pin */
-  GPIO_InitStruct.Pin = STATE0_Pin|STATE1_Pin|STATE2_Pin|BUZZER_Pin
-                          |ULTRASONIC_TRIG_Pin;
+  /*Configure GPIO pins : COMM_AUTO0_Pin COMM_AUTO1_Pin BUZZER_Pin ULTRASONIC_TRIG_Pin */
+  GPIO_InitStruct.Pin = COMM_AUTO0_Pin|COMM_AUTO1_Pin|BUZZER_Pin|ULTRASONIC_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : COMM_HUM_FLAG_Pin */
+  GPIO_InitStruct.Pin = COMM_HUM_FLAG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(COMM_HUM_FLAG_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -855,9 +858,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if (huart->Instance == USART3) {
-        CommBus_RxHandler();
-    }
+//    if (huart->Instance == USART3) {
+//        CommBus_RxHandler();
+//    }
 }
 
 /* USER CODE END 4 */

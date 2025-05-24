@@ -433,14 +433,14 @@ void Uart_isr (UART_HandleTypeDef *huart)
 //}
 
 void Debug_Print_Buffer(void) {
-	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n--- RX Buffer Dump ---\r\n", strlen("\r\n--- RX Buffer Dump ---\r\n"), HAL_MAX_DELAY);
+//	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n--- RX Buffer Dump ---\r\n", strlen("\r\n--- RX Buffer Dump ---\r\n"), HAL_MAX_DELAY);
     int pos = _rx_buffer->tail;
     while (pos != _rx_buffer->head) {
 //    	HAL_UART_Transmit(&huart2, &(_rx_buffer->buffer[pos]), 1, 10);
-    	 HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n**\r\n", strlen("\r\n**\r\n"), HAL_MAX_DELAY);
+//    	 HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n**\r\n", strlen("\r\n**\r\n"), HAL_MAX_DELAY);
         pos = (pos + 1) % UART_BUFFER_SIZE;
     }
-    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n----------------------\r\n", strlen("\r\n----------------------\r\n"), HAL_MAX_DELAY);
+//    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n----------------------\r\n", strlen("\r\n----------------------\r\n"), HAL_MAX_DELAY);
 }
 
 int Get_latest_sentence(char *prefix, char *out_sentence) {

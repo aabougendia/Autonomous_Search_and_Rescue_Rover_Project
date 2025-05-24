@@ -59,6 +59,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define PIR_OUTPUT_Pin GPIO_PIN_13
+#define PIR_OUTPUT_GPIO_Port GPIOC
+#define COMM_MOTION_FLAG_Pin GPIO_PIN_0
+#define COMM_MOTION_FLAG_GPIO_Port GPIOA
 #define SERVO_PWM_Pin GPIO_PIN_1
 #define SERVO_PWM_GPIO_Port GPIOA
 #define SERIAL_TX_Pin GPIO_PIN_2
@@ -73,20 +77,20 @@ void Error_Handler(void);
 #define MOTOR_DIR2_GPIO_Port GPIOA
 #define MOTOR_EN2_Pin GPIO_PIN_7
 #define MOTOR_EN2_GPIO_Port GPIOA
-#define PIR_SENSOR_Pin GPIO_PIN_0
-#define PIR_SENSOR_GPIO_Port GPIOB
-#define STATE_ACK_R_Pin GPIO_PIN_1
-#define STATE_ACK_R_GPIO_Port GPIOB
+#define COMM_MAN0_AUTO_ACK_Pin GPIO_PIN_0
+#define COMM_MAN0_AUTO_ACK_GPIO_Port GPIOB
+#define COMM_MAN1_Pin GPIO_PIN_1
+#define COMM_MAN1_GPIO_Port GPIOB
 #define COMMBUS_TX_Pin GPIO_PIN_10
 #define COMMBUS_TX_GPIO_Port GPIOB
 #define COMMBUS_RX_Pin GPIO_PIN_11
 #define COMMBUS_RX_GPIO_Port GPIOB
-#define STATE0_Pin GPIO_PIN_12
-#define STATE0_GPIO_Port GPIOB
-#define STATE1_Pin GPIO_PIN_13
-#define STATE1_GPIO_Port GPIOB
-#define STATE2_Pin GPIO_PIN_14
-#define STATE2_GPIO_Port GPIOB
+#define COMM_AUTOMAN_STATE_Pin GPIO_PIN_12
+#define COMM_AUTOMAN_STATE_GPIO_Port GPIOB
+#define COMM_AUTO0_Pin GPIO_PIN_13
+#define COMM_AUTO0_GPIO_Port GPIOB
+#define COMM_AUTO1_Pin GPIO_PIN_14
+#define COMM_AUTO1_GPIO_Port GPIOB
 #define BUZZER_Pin GPIO_PIN_15
 #define BUZZER_GPIO_Port GPIOB
 #define MOTOR_A_PWM_Pin GPIO_PIN_8
@@ -99,8 +103,10 @@ void Error_Handler(void);
 #define LED_G_GPIO_Port GPIOA
 #define LED_R_Pin GPIO_PIN_12
 #define LED_R_GPIO_Port GPIOA
-#define STATE_ACK_S_Pin GPIO_PIN_3
-#define STATE_ACK_S_GPIO_Port GPIOB
+#define COMM_HUM_FLAG_Pin GPIO_PIN_15
+#define COMM_HUM_FLAG_GPIO_Port GPIOA
+#define COMM_MAN2_Pin GPIO_PIN_3
+#define COMM_MAN2_GPIO_Port GPIOB
 #define ULTRASONIC_ECHO_Pin GPIO_PIN_4
 #define ULTRASONIC_ECHO_GPIO_Port GPIOB
 #define ULTRASONIC_TRIG_Pin GPIO_PIN_5

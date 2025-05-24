@@ -1,15 +1,14 @@
 // #include "CommBus.h"
-// #include <Wire.h>
-// #include "AMG8833.h"
+#include <Wire.h>
+#include "AMG8833.h"
 
-#include "System_Flow.h"
+#include "SystemFlow_ESP32.h"
 
 // CommBus comm(Serial2);
 
 
 
-AMG8833 thermalSensor;
-float temperatureData[64];
+
 
 
 void setup() {
@@ -62,7 +61,7 @@ void loop() {
 
   // Serial.println("____________________________________");
 
-  
+  /****************   thermal test  ****************/
     // thermalSensor.readPixels(temperatureData);
     // thermalSensor.printPixels();  // Optional
     // delay(1000);
