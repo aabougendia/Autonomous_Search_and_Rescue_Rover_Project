@@ -130,22 +130,18 @@ static void Handle_AutoState_Reconning() {
 static void Handle_AutoState_SendInfo() {
     Serial.println("AUTO 1 : SEND INFO");
 
+    int firstWww = GPS_GoogleMapsLink.indexOf("www");
+    if (firstWww != -1) {
+        int secondWww = GPS_GoogleMapsLink.indexOf("www", firstWww + 3);
+        if (secondWww != -1) {
+            GPS_GoogleMapsLink = GPS_GoogleMapsLink.substring(0, secondWww);
+            log("Truncated GPS link at second 'www': " + GPS_GoogleMapsLink);
+        }
+    }
+
     String ReceivedGoogleMapsLink = Get_GPSLink();
     if (ReceivedGoogleMapsLink != "") {
-        // Ensure no repetition by using the first valid URL
-        if (GPS_GoogleMapsLink != ReceivedGoogleMapsLink) {
-            GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
-        }
-
-        // Truncate at second "www" to prevent URL repetition
-        int firstWww = GPS_GoogleMapsLink.indexOf("www");
-        if (firstWww != -1) {
-            int secondWww = GPS_GoogleMapsLink.indexOf("www", firstWww + 3);
-            if (secondWww != -1) {
-                GPS_GoogleMapsLink = GPS_GoogleMapsLink.substring(0, secondWww);
-                log("Truncated GPS link at second 'www': " + GPS_GoogleMapsLink);
-            }
-        }
+        GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
 
         unsigned long startTime = millis();
         pir_state = 0;
@@ -155,12 +151,17 @@ static void Handle_AutoState_SendInfo() {
 
         Serial.println("info received\n");
 
-        // Construct message with state and full GPS link
+        // Construct message with state and coordinates
+        String coordinates = extractCoordinates(GPS_GoogleMapsLink);
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
-        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation Coordinates: " + coordinates;
         log("Message length: " + String(message.length()));
+        if (message.length() > 160) {
+            log("Message too long, truncating to 160 chars.");
+            message = message.substring(0, 160);
+        }
 
-        log("Sending SMS with state and location...");
+        log("Sending SMS with state and coordinates...");
         if (sendSMS(message)) {
             log("SMS sent successfully.");
             digitalWrite(LED_BUILTIN, HIGH);
