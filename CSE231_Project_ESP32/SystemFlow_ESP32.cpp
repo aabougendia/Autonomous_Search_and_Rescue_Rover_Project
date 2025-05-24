@@ -132,7 +132,10 @@ static void Handle_AutoState_SendInfo() {
 
     String ReceivedGoogleMapsLink = Get_GPSLink();
     if (ReceivedGoogleMapsLink != "") {
-        GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
+        // Ensure no repetition by using the first valid URL
+        if (GPS_GoogleMapsLink != ReceivedGoogleMapsLink) {
+            GPS_GoogleMapsLink = ReceivedGoogleMapsLink;
+        }
 
         unsigned long startTime = millis();
         pir_state = 0;
@@ -142,17 +145,16 @@ static void Handle_AutoState_SendInfo() {
 
         Serial.println("info received\n");
 
-        // Construct message with state and coordinates
-        String coordinates = extractCoordinates(GPS_GoogleMapsLink);
+        // Construct message with state and full GPS link
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
-        String message = "HUMAN FOUND\nState: " + state + "\nLocation Coordinates: " + coordinates;
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
         log("Message length: " + String(message.length()));
         if (message.length() > 160) {
             log("Message too long, truncating to 160 chars.");
             message = message.substring(0, 160);
         }
 
-        log("Sending SMS with state and coordinates...");
+        log("Sending SMS with state and location...");
         if (sendSMS(message)) {
             log("SMS sent successfully.");
             digitalWrite(LED_BUILTIN, HIGH);
