@@ -23,22 +23,6 @@ ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
 ManualState sys_manual_state = DRV_STOP;
 
-typedef struct {
-    u8 R, G, B;
-    uint32_t on_ms;
-    uint32_t off_ms;
-    u8 blink;
-    u8 beep;
-} AlertPattern;
-
-const AlertPattern alert_patterns[] = {
-    [RECONNING]  = {0, 0, 1, 100, 2000, 1, 1},
-    [SEND_INFO]  = {1, 0, 0, 500, 1000, 1, 1},
-    [IDLE]       = {0, 1, 0, 0,    0,   0, 0}
-};
-
-
-void AlertHandler_Update(AutoState state);
 
 
 /**************   Auto States  ****************/
@@ -70,7 +54,6 @@ void SystemFlow_Run(){
 
 	HAL_UART_Transmit(&huart2, (uint8_t*)"start run\r\n", strlen("start run\r\n"), HAL_MAX_DELAY);
     if(control_state == STATE_AUTO) {
-    	AlertHandler_Update(sys_auto_state);
         switch (sys_auto_state) {
             case RECONNING:
                 Handle_AutoState_Reconning();
@@ -125,37 +108,6 @@ void SystemFlow_Run(){
     }
 
 
-}
-
-
-void AlertHandler_Update(AutoState state) {
-    static uint8_t is_on = 0;
-    static uint32_t last_tick = 0;
-    uint32_t now = HAL_GetTick();
-
-    AlertPattern cfg = alert_patterns[state];
-
-    if (!cfg.blink) {
-        RGB_LED_vON(cfg.R, cfg.G, cfg.B);
-        BUZZER_vOFF();
-        return;
-    }
-
-    uint32_t interval = is_on ? cfg.on_ms : cfg.off_ms;
-
-    if (now - last_tick >= interval) {
-        last_tick = now;
-        is_on = !is_on;
-
-        if (is_on) {
-            RGB_LED_vON(cfg.R, cfg.G, cfg.B);
-            if (cfg.beep)
-                BUZZER_vON();
-        } else {
-            RGB_LED_vOFF();
-            BUZZER_vOFF();
-        }
-    }
 }
 
 
@@ -230,15 +182,17 @@ static void Handle_AutoState_Reconning(void){
 //	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 //	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
 //
-//	thm_state = Get_THM_HUM();
+	thm_state = Get_THM_HUM();
 //
-//	if(thm_state == THM_HUM_DETECTED){
-//		HAL_UART_Transmit(&huart2, (uint8_t*)"HUMAN\r\n", strlen("HUMAN\r\n"), HAL_MAX_DELAY);
-//		sys_auto_state = SEND_INFO;
-//	}
-//	else if(thm_state == THM_HUM_NOT_DETECTED){
-//		HAL_UART_Transmit(&huart2, (uint8_t*)"NOT HUMAN\r\n", strlen("NOT HUMAN\r\n"), HAL_MAX_DELAY);
-//	}
+	if(thm_state == THM_HUM_DETECTED){
+		HAL_UART_Transmit(&huart2, (uint8_t*)"HUMAN\r\n", strlen("HUMAN\r\n"), HAL_MAX_DELAY);
+		Stepper_Stop();
+		sys_auto_state = SEND_INFO;
+		return;
+	}
+	else if(thm_state == THM_HUM_NOT_DETECTED){
+		HAL_UART_Transmit(&huart2, (uint8_t*)"NOT HUMAN\r\n", strlen("NOT HUMAN\r\n"), HAL_MAX_DELAY);
+	}
 
 
     Stepper_MoveForward(ROVER_SPEED);
@@ -317,7 +271,7 @@ static void Handle_AutoState_SendInfo(void){
 static void Handle_AutoState_Idle(void){
 	LOG_UART("AUTO STATE 2: IDLE");
 
-	HAL_Delay(1000);
+	HAL_Delay(8000);
 
 	sys_auto_state = RECONNING;
 }
