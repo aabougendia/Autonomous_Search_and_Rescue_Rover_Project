@@ -156,7 +156,7 @@ static void Handle_AutoState_SendInfo() {
         // Construct message with state and coordinates
         String cc = extractCoordinates(GPS_GoogleMapsLink);
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
-        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + cc;
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
         log("Message length: " + String(message.length()));
         if (message.length() > 160) {
             log("Message too long, truncating to 160 chars.");

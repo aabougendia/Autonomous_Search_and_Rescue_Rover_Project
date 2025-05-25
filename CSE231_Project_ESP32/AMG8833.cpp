@@ -37,6 +37,27 @@ float AMG8833::getAverageTemperature() {
     return sum / 64.0;
 }
 
+float AMG8833::computeAdaptiveDelta() {
+    float mean = getAverageTemperature();
+    float sumSq = 0.0;
+    for (int i = 0; i < 64; i++) {
+        float diff = pixels[i] - mean;
+        sumSq += diff * diff;
+    }
+    float stddev = sqrt(sumSq / 64.0);
+
+    // Adaptive, but clamped to a safe and functional range
+    float delta = stddev * 1.25 + 0.75;  // tuned formula
+    delta = constrain(delta, 1.2, 1.75); // empirically verified range
+
+    Serial.print("Ambient = "); Serial.print(mean, 2);
+    Serial.print("  StdDev = "); Serial.print(stddev, 2);
+    Serial.print("  Adaptive Delta = "); Serial.println(delta, 2);
+
+    return delta;
+}
+
+
 // --- Static threshold human detection ---
 bool AMG8833::detectHuman(float minTemp, int minClusterSize) {
     sensor.readPixels(pixels);
@@ -61,6 +82,8 @@ bool AMG8833::detectHuman(float minTemp, int minClusterSize) {
 // --- Ambient-relative human detection ---
 bool AMG8833::detectHumanRelative(float delta, int minClusterSize) {
     sensor.readPixels(pixels);
+
+    delta = computeAdaptiveDelta();
     float ambient = getAverageTemperature();
     int clusters = detectHeatClusters(ambient + delta, true);
 
