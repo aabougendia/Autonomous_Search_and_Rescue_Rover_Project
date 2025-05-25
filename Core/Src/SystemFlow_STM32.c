@@ -18,6 +18,7 @@ extern UART_HandleTypeDef huart3;
 #define OBSTACLE_THRESHOLD 45 // Distance in cm for obstacle detection
 #define TILT_THRESHOLD 15.0f  // Max allowable tilt in degrees
 #define MOVE_TIME_MS 5000     // Approximate time to move 1 meter at ROVER_SPEED (adjust based on testing)
+#define SENSOR_CHECK_INTERVAL 100 // Check sensors every 100 ms during movement
 
 char GPS_GoogleMapsLink[150];
 PIR_OUT pir_state;
@@ -175,14 +176,6 @@ static void Avoid_Obstacle(void){
 
 }
 
-
-#define MOVE_DISTANCE 1000 // Distance to move in mm (1 meter)
-#define TURN_SPEED 400    // Speed for turning
-#define OBSTACLE_THRESHOLD 45 // Distance in cm for obstacle detection
-#define TILT_THRESHOLD 15.0f  // Max allowable tilt in degrees
-#define MOVE_TIME_MS 5000     // Approximate time to move 1 meter at ROVER_SPEED (adjust based on testing)
-#define SENSOR_CHECK_INTERVAL 100 // Check sensors every 100 ms during movement
-
 static void Handle_AutoState_Reconning(void) {
     LOG_UART("AUTO STATE 0: RECONNING");
 
@@ -191,30 +184,17 @@ static void Handle_AutoState_Reconning(void) {
     static uint32_t move_start_time = 0;
     static uint8_t is_moving = 0;
     static uint32_t last_sensor_check = 0;
+    static uint32_t last_cycle = 0;
 
+    // Calculate dynamic time step (dt) using DWT
+    uint32_t now_cycle = DWT->CYCCNT;
+    uint32_t cpu_freq = HAL_RCC_GetHCLKFreq(); // e.g., 84,000,000 Hz
+    float dt = (now_cycle - last_cycle) / (float)cpu_freq;
+    last_cycle = now_cycle;
 
-    static uint32_t lastCycle = 0;
-    uint32_t nowCycle = DWT->CYCCNT;
-
-    // Get system clock frequency
-    uint32_t cpuFreq = HAL_RCC_GetHCLKFreq();  // e.g. 84,000,000 Hz
-
-    // Convert cycle count difference to seconds
-    float dt = (nowCycle - lastCycle) / (float)cpuFreq;
-    lastCycle = nowCycle;
-
-    // Use real dt in your attitude function
+    // Update MPU6050 attitude with dynamic dt
     MPU6050_calcAttitude(&hi2c1, dt);
 
-
-    // Check for excessive tilt to ensure stability
-    if (fabs(attitude.r) > TILT_THRESHOLD || fabs(attitude.p) > TILT_THRESHOLD) {
-        HAL_UART_Transmit(&huart2, (uint8_t*)"UNSTABLE ORIENTATION DETECTED\r\n", strlen("UNSTABLE ORIENTATION DETECTED\r\n"), HAL_MAX_DELAY);
-        Stepper_Stop(); // Stop to prevent tipping
-        HAL_Delay(1000); // Wait to stabilize
-        is_moving = 0;
-        return;
-    }
 
     // Check thermal sensor for human detection
     thm_state = Get_THM_HUM();
@@ -226,7 +206,7 @@ static void Handle_AutoState_Reconning(void) {
         return;
     }
 
-    // Check for obstacles using ultrasonic sensor
+    // Check for obstacles using ultrasonic sensor during movement
     if (HAL_GetTick() - last_sensor_check >= SENSOR_CHECK_INTERVAL) {
         uint16_t dist = Get_Average_Distance();
         char msg[50];
@@ -236,8 +216,61 @@ static void Handle_AutoState_Reconning(void) {
         if (dist < OBSTACLE_THRESHOLD) {
             HAL_UART_Transmit(&huart2, (uint8_t*)"OBSTACLE DETECTED\r\n", strlen("OBSTACLE DETECTED\r\n"), HAL_MAX_DELAY);
             Stepper_Stop(); // Stop immediately
-            Avoid_Obstacle(); // Handle obstacle avoidance
-            is_moving = 0; // Reset movement state
+
+            // Scan right and left to find greater clearance
+            uint16_t right_distance = 0, left_distance = 0;
+
+            // Look to the right (0 degrees)
+            for (uint8_t ang = 90; ang > 0; ang -= 10) {
+                Servo_SetAngle(ang);
+                HAL_Delay(50);
+            }
+            HAL_Delay(200);
+            right_distance = Get_Average_Distance();
+            sprintf(msg, "Right Distance: %u cm\r\n", right_distance);
+            HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+            // Look to the left (180 degrees)
+            for (uint8_t ang = 0; ang < 180; ang += 10) {
+                Servo_SetAngle(ang);
+                HAL_Delay(50);
+            }
+            HAL_Delay(200);
+            left_distance = Get_Average_Distance();
+            sprintf(msg, "Left Distance: %u cm\r\n", left_distance);
+            HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+            // Reset servo to forward (90 degrees)
+            Servo_SetAngle(90);
+            HAL_Delay(200);
+
+            // Back up slightly to allow turning
+            Stepper_MoveBackward(200);
+            HAL_Delay(1500);
+            Stepper_Stop();
+
+            // Turn 90 degrees toward the direction with greater clearance using MPU6050 yaw
+            float initial_yaw = attitude.y;
+            if (right_distance >= left_distance) {
+                HAL_UART_Transmit(&huart2, (uint8_t*)"TURNING RIGHT (MORE CLEARANCE)\r\n", strlen("TURNING RIGHT (MORE CLEARANCE)\r\n"), HAL_MAX_DELAY);
+                Stepper_TurnRight(TURN_SPEED);
+            } else {
+                HAL_UART_Transmit(&huart2, (uint8_t*)"TURNING LEFT (MORE CLEARANCE)\r\n", strlen("TURNING LEFT (MORE CLEARANCE)\r\n"), HAL_MAX_DELAY);
+                Stepper_TurnLeft(TURN_SPEED);
+            }
+
+            // Wait until a 90-degree turn is completed or timeout
+            uint32_t turn_start_time = HAL_GetTick();
+            while (fabs(attitude.y - initial_yaw) < 90.0f && (HAL_GetTick() - turn_start_time) < 5000) {
+                now_cycle = DWT->CYCCNT;
+                dt = (now_cycle - last_cycle) / (float)cpu_freq;
+                last_cycle = now_cycle;
+                MPU6050_calcAttitude(&hi2c1, dt); // Update yaw during turn
+                HAL_Delay(10);
+            }
+            Stepper_Stop(); // Stop turning
+
+            is_moving = 0; // Reset movement state to restart 1-meter segment
             return;
         }
         last_sensor_check = HAL_GetTick();
@@ -255,8 +288,8 @@ static void Handle_AutoState_Reconning(void) {
         if (HAL_GetTick() - move_start_time >= MOVE_TIME_MS) {
             Stepper_Stop(); // Stop after moving 1 meter
 
-            // Perform a 90-degree turn using MPU6050 yaw
-            float initial_yaw = attitude.y; // Current yaw
+            // Perform a 90-degree turn for systematic exploration
+            float initial_yaw = attitude.y;
             if (turn_direction == 0) {
                 Stepper_TurnRight(TURN_SPEED);
                 HAL_UART_Transmit(&huart2, (uint8_t*)"TURNING RIGHT\r\n", strlen("TURNING RIGHT\r\n"), HAL_MAX_DELAY);
@@ -268,6 +301,9 @@ static void Handle_AutoState_Reconning(void) {
             // Wait until a 90-degree turn is completed or timeout
             uint32_t turn_start_time = HAL_GetTick();
             while (fabs(attitude.y - initial_yaw) < 90.0f && (HAL_GetTick() - turn_start_time) < 5000) {
+                now_cycle = DWT->CYCCNT;
+                dt = (now_cycle - last_cycle) / (float)cpu_freq;
+                last_cycle = now_cycle;
                 MPU6050_calcAttitude(&hi2c1, dt); // Update yaw during turn
                 HAL_Delay(10);
             }
@@ -279,19 +315,8 @@ static void Handle_AutoState_Reconning(void) {
         }
     }
 
-    // Periodically log GPS coordinates for mapping (every 5 seconds)
-//    static uint32_t last_gps_log = 0;
-//    if (HAL_GetTick() - last_gps_log >= 5000) {
-//        strcpy(GPS_GoogleMapsLink, GPS_getGoogleMapsLink());
-//        HAL_UART_Transmit(&huart2, (uint8_t*)"GPS: ", 5, HAL_MAX_DELAY);
-//        HAL_UART_Transmit(&huart2, (uint8_t*)GPS_GoogleMapsLink, strlen(GPS_GoogleMapsLink), HAL_MAX_DELAY);
-//        HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, HAL_MAX_DELAY);
-//        last_gps_log = HAL_GetTick();
-//    }
-
     HAL_Delay(10); // Small delay for system stability
 }
-
 static void Handle_AutoState_SendInfo(void){
 	LOG_UART("AUTO STATE 1: SEND INFO");
 
