@@ -156,7 +156,7 @@ static void Handle_AutoState_SendInfo() {
         // Construct message with state and coordinates
         String cc = extractCoordinates(GPS_GoogleMapsLink);
         String state = (pir_state == 1) ? "Conscious" : "Not Conscious";
-        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + GPS_GoogleMapsLink;
+        String message = "HUMAN FOUND\nState: " + state + "\nLocation: " + cc;
         log("Message length: " + String(message.length()));
         if (message.length() > 160) {
             log("Message too long, truncating to 160 chars.");
@@ -292,7 +292,7 @@ static void log(const String& msg) {
 }
 
 static String extractCoordinates(const String& url) {
-    // Expecting URL format: https://www.google.com/maps?q=latitude,longitude
+    // Expecting URL format: www.google.com/maps?q=latitude,longitude
     int startIndex = url.indexOf("?q=");
     if (startIndex == -1) {
         log("Invalid GPS URL format.");

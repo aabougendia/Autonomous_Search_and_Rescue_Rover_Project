@@ -70,7 +70,7 @@ void AlertHandler_SysTickCallback(void) {
 
     static const AlertPattern patterns[] = {
         [RECONNING]  = {0, 0, 1, 100, 2000, 1},    // Blue blink + beep
-        [SEND_INFO]  = {1, 0, 0, 1000, 1000, 1},   // Red blink
+        [SEND_INFO]  = {1, 0, 0, 400, 1000, 1},   // Red blink
         [IDLE]       = {0, 1, 0, 0, 0, 0}          // Green steady
     };
 
