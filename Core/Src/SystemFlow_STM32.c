@@ -1,7 +1,7 @@
 
 #include "SystemFlow_STM32.h"
 
-
+extern I2C_HandleTypeDef hi2c1;
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
@@ -51,7 +51,8 @@ void SystemFlow_Init(){
     Servo_SetAngle(90);
     GPS_Init();
     Ultrasonic_Init();
-
+    MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
+    MPU6050_calibrateGyro(&hi2c1, 1000);
     Stepper_Init();
 //    CommBus_Init(&huart3);
 }
@@ -175,11 +176,6 @@ static void Avoid_Obstacle(void){
 }
 
 
-
-
-c
-
-        Copy
 #define MOVE_DISTANCE 1000 // Distance to move in mm (1 meter)
 #define TURN_SPEED 400    // Speed for turning
 #define OBSTACLE_THRESHOLD 45 // Distance in cm for obstacle detection
@@ -196,8 +192,20 @@ static void Handle_AutoState_Reconning(void) {
     static uint8_t is_moving = 0;
     static uint32_t last_sensor_check = 0;
 
-    // Update MPU6050 attitude for orientation and stability
-    MPU6050_calcAttitude(&hi2c1);
+
+    static uint32_t lastCycle = 0;
+    uint32_t nowCycle = DWT->CYCCNT;
+
+    // Get system clock frequency
+    uint32_t cpuFreq = HAL_RCC_GetHCLKFreq();  // e.g. 84,000,000 Hz
+
+    // Convert cycle count difference to seconds
+    float dt = (nowCycle - lastCycle) / (float)cpuFreq;
+    lastCycle = nowCycle;
+
+    // Use real dt in your attitude function
+    MPU6050_calcAttitude(&hi2c1, dt);
+
 
     // Check for excessive tilt to ensure stability
     if (fabs(attitude.r) > TILT_THRESHOLD || fabs(attitude.p) > TILT_THRESHOLD) {
@@ -260,7 +268,7 @@ static void Handle_AutoState_Reconning(void) {
             // Wait until a 90-degree turn is completed or timeout
             uint32_t turn_start_time = HAL_GetTick();
             while (fabs(attitude.y - initial_yaw) < 90.0f && (HAL_GetTick() - turn_start_time) < 5000) {
-                MPU6050_calcAttitude(&hi2c1); // Update yaw during turn
+                MPU6050_calcAttitude(&hi2c1, dt); // Update yaw during turn
                 HAL_Delay(10);
             }
             Stepper_Stop(); // Stop turning

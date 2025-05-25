@@ -71,7 +71,7 @@ extern float aScaleFactor, gScaleFactor;
 // Functions
 uint8_t MPU6050_init(I2C_HandleTypeDef *I2Cx, uint8_t addr, uint8_t aScale, uint8_t gScale, float tau, float dt);
 void MPU6050_calibrateGyro(I2C_HandleTypeDef *I2Cx, uint16_t numCalPoints);
-void MPU6050_calcAttitude(I2C_HandleTypeDef *I2Cx);
+void MPU6050_calcAttitude(I2C_HandleTypeDef *I2Cx, float dt);
 void MPU6050_readRawData(I2C_HandleTypeDef *I2Cx);
 void MPU6050_readProcessedData(I2C_HandleTypeDef *I2Cx);
 void MPU6050_writeGyroFullScaleRange(I2C_HandleTypeDef *I2Cx, uint8_t gScale);

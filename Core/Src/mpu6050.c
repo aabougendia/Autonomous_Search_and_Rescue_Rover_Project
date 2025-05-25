@@ -16,6 +16,11 @@ float aScaleFactor, gScaleFactor;
 
 uint8_t MPU6050_init(I2C_HandleTypeDef *I2Cx, uint8_t addr, uint8_t aScale, uint8_t gScale, float tau, float dt)
 {
+	// Enable DWT cycle counter (if not already enabled)
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CYCCNT = 0;
+	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
     // Save values
     _addr = addr << 1;
     _tau = tau;
@@ -212,7 +217,7 @@ void MPU6050_readProcessedData(I2C_HandleTypeDef *I2Cx)
 
 /// @brief Calculate the attitude of the sensor in degrees using a complementary filter.
 /// @param I2Cx Pointer to I2C structure config.
-void MPU6050_calcAttitude(I2C_HandleTypeDef *I2Cx)
+void MPU6050_calcAttitude(I2C_HandleTypeDef *I2Cx, float dt)
 {
     // Read processed data
     MPU6050_readProcessedData(I2Cx);
