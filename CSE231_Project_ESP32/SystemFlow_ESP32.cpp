@@ -16,7 +16,7 @@ float temperatureData[64];
 
 // WebServer server(80);
 
-ControlState control_state = STATE_AUTO;
+// ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
 
 ManualState sys_manual_state = DRV_STOP;
@@ -63,6 +63,9 @@ void SystemFlow_Init() {
 void SystemFlow_Run() {
     Serial.println("start run");
 
+    Set_Ctrl_State(control_state);
+
+    server.handleClient();
     if (control_state == STATE_AUTO) {
         sys_auto_state = Get_Auto_State();
         switch (sys_auto_state) {
@@ -80,7 +83,7 @@ void SystemFlow_Run() {
     }
     else if (control_state == STATE_MANUAL) {
         Serial.println("start manual");
-        server.handleClient();
+        // server.handleClient();
 
         switch (man_state) {
             case DRV_STOP:

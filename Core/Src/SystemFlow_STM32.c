@@ -25,7 +25,7 @@ PIR_OUT pir_state;
 THM_State thm_state;
 
 
-ControlState control_state = STATE_AUTO;
+ControlState control_state = STATE_MANUAL;
 AutoState sys_auto_state = RECONNING;
 ManualState sys_manual_state = DRV_STOP;
 
@@ -62,6 +62,7 @@ void SystemFlow_Init(){
 void SystemFlow_Run(){
 
 	HAL_UART_Transmit(&huart2, (uint8_t*)"start run\r\n", strlen("start run\r\n"), HAL_MAX_DELAY);
+	control_state = Get_Ctrl_State();
     if(control_state == STATE_AUTO) {
         switch (sys_auto_state) {
             case RECONNING:
@@ -132,7 +133,6 @@ static void trigger_Gyro(){
     last_cycle = now_cycle;
 
     // Update MPU6050 attitude with dynamic dt
-    MPU6050_calibrateGyro(&hi2c1, 1000);
     MPU6050_calcAttitude(&hi2c1, dt);
 }
 
@@ -185,6 +185,7 @@ static void Avoid_Obstacle(void){
 	// Deciding to turn right or left
 	if(Right_Distance >= Left_Distance){
 		Stepper_TurnRight(400);
+	    MPU6050_calibrateGyro(&hi2c1, 1000);
 		while(1){
 			trigger_Gyro();
 			  char buffer[50];  // Make sure the buffer is large enough
@@ -193,22 +194,24 @@ static void Avoid_Obstacle(void){
 			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
 			  // Convert float to string
 			  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
-			if(attitude.y >= -1.4){
+			if(attitude.y >= -1.6){
 				break;
 			}
 		}
 	}
 	else {
 		Stepper_TurnLeft(400);
+
+	    MPU6050_calibrateGyro(&hi2c1, 1000);
 		while(1){
 			trigger_Gyro();
-			  char buffer[50];  // Make sure the buffer is large enough
+			char buffer[50];  // Make sure the buffer is large enough
 
-			  sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
-			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+			 sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
+			 HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
 			  // Convert float to string
-			  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
-			if(attitude.y <= 1.4){
+			sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
+			if(attitude.y <= 1.6){
 				break;
 			}
 		}

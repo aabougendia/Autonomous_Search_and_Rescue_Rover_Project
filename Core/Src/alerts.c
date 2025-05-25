@@ -4,6 +4,7 @@
 #include "SystemFlow_STM32.h"
 
 extern AutoState sys_auto_state;
+extern ControlState control_state;
 
 void LED_vON(GPIO_TypeDef* GPIOx, u16 GPIO_Pin)
 {
@@ -67,6 +68,12 @@ void AlertHandler_SysTickCallback(void) {
     static AutoState last_state = 255;
     static uint32_t counter = 0;
     static uint8_t is_on = 0;
+
+    if (control_state == STATE_MANUAL) {
+        RGB_LED_vON(0, 0, 1);  // Steady blue
+        BUZZER_vOFF();
+        return;
+    }
 
     static const AlertPattern patterns[] = {
         [RECONNING]  = {0, 0, 1, 100, 2000, 1},    // Blue blink + beep

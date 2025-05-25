@@ -88,18 +88,7 @@ static void MX_I2C1_Init(void);
 /* USER CODE BEGIN 0 */
 
 extern char GPS_outputBuffer[150];
-static void trigger_Gyro(){
-    // Calculate dynamic time step (dt) using DWT
-    uint32_t now_cycle = DWT->CYCCNT;
-    static uint32_t last_cycle = 0;
-    uint32_t cpu_freq = HAL_RCC_GetHCLKFreq(); // e.g., 84,000,000 Hz
-    float dt = (now_cycle - last_cycle) / (float)cpu_freq;
-    last_cycle = now_cycle;
 
-    // Update MPU6050 attitude with dynamic dt
-//    MPU6050_calibrateGyro(&hi2c1, 1000);
-    MPU6050_calcAttitude(&hi2c1, dt);
-}
 /* USER CODE END 0 */
 
 /**
@@ -148,21 +137,21 @@ int main(void)
 
 
 //  HAL_UART_Transmit(&huart2, (uint8_t*)"start main\r\n", strlen("start main\r\n"), HAL_MAX_DELAY);
-//  SystemFlow_Init();
+  SystemFlow_Init();
 
   /***********************  MPU test   **********************/
 //
-  MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
+//  MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
 //
-  char dbg[100];
-  sprintf(dbg, "aScale=%.2f gScale=%.2f dt=%.4f tau=%.2f\r\n", aScaleFactor, gScaleFactor, _dt, _tau);
-  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
+//  char dbg[100];
+//  sprintf(dbg, "aScale=%.2f gScale=%.2f dt=%.4f tau=%.2f\r\n", aScaleFactor, gScaleFactor, _dt, _tau);
+//  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
 //
 //
-  MPU6050_calibrateGyro(&hi2c1, 1000);
-  printf("GyroCal Z = %.2f\r\n", gyroCal.z);
-  sprintf(dbg, "GyroCal Z = %.2f\r\n", gyroCal.z);
-  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
+//  MPU6050_calibrateGyro(&hi2c1, 1000);
+//  printf("GyroCal Z = %.2f\r\n", gyroCal.z);
+//  sprintf(dbg, "GyroCal Z = %.2f\r\n", gyroCal.z);
+//  HAL_UART_Transmit(&huart2, (uint8_t *)dbg, strlen(dbg), HAL_MAX_DELAY);
 
   /* USER CODE END 2 */
 
@@ -362,7 +351,7 @@ int main(void)
 
 	  /***************   system flow test  ********************/
 //	  LOG_UART("in main\r\n");
-//	  SystemFlow_Run();
+	  SystemFlow_Run();
 
 
 
@@ -382,16 +371,10 @@ int main(void)
 //	  HAL_Delay(200);
 
 
-	  Stepper_Stop();
-		trigger_Gyro();
-		  char buffer[50];  // Make sure the buffer is large enough
 
-		  sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
-		  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-		  // Convert float to string
-		  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
 
-		  HAL_Delay(200);
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
