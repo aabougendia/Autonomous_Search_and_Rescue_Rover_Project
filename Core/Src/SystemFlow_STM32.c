@@ -13,6 +13,11 @@ extern UART_HandleTypeDef huart3;
 
 #define ROVER_SPEED 400
 
+#define MOVE_DISTANCE 1000 // Distance to move in mm (1 meter)
+#define TURN_SPEED 400    // Speed for turning
+#define OBSTACLE_THRESHOLD 45 // Distance in cm for obstacle detection
+#define TILT_THRESHOLD 15.0f  // Max allowable tilt in degrees
+#define MOVE_TIME_MS 5000     // Approximate time to move 1 meter at ROVER_SPEED (adjust based on testing)
 
 char GPS_GoogleMapsLink[150];
 PIR_OUT pir_state;
@@ -172,54 +177,111 @@ static void Avoid_Obstacle(void){
 
 
 
-static void Handle_AutoState_Reconning(void){
+c
 
-	LOG_UART("AUTO STATE 0: RECONNING");
-//
-//	Ultrasonic_Read();
-//	char msg[50];
-//	sprintf(msg, "Distance: %u cm\r\n", ULT_Distance);
-//	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-//	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
-//
-	thm_state = Get_THM_HUM();
-//
-	if(thm_state == THM_HUM_DETECTED){
-		HAL_UART_Transmit(&huart2, (uint8_t*)"HUMAN\r\n", strlen("HUMAN\r\n"), HAL_MAX_DELAY);
-		Stepper_Stop();
-		sys_auto_state = SEND_INFO;
-		return;
-	}
-	else if(thm_state == THM_HUM_NOT_DETECTED){
-		HAL_UART_Transmit(&huart2, (uint8_t*)"NOT HUMAN\r\n", strlen("NOT HUMAN\r\n"), HAL_MAX_DELAY);
-	}
+        Copy
+#define MOVE_DISTANCE 1000 // Distance to move in mm (1 meter)
+#define TURN_SPEED 400    // Speed for turning
+#define OBSTACLE_THRESHOLD 45 // Distance in cm for obstacle detection
+#define TILT_THRESHOLD 15.0f  // Max allowable tilt in degrees
+#define MOVE_TIME_MS 5000     // Approximate time to move 1 meter at ROVER_SPEED (adjust based on testing)
+#define SENSOR_CHECK_INTERVAL 100 // Check sensors every 100 ms during movement
 
+static void Handle_AutoState_Reconning(void) {
+    LOG_UART("AUTO STATE 0: RECONNING");
 
-    Stepper_MoveForward(ROVER_SPEED);
+    // Initialize variables
+    static uint8_t turn_direction = 0; // 0 for right, 1 for left (alternate for grid pattern)
+    static uint32_t move_start_time = 0;
+    static uint8_t is_moving = 0;
+    static uint32_t last_sensor_check = 0;
 
-    HAL_Delay(100);
-    thm_state = Get_THM_HUM();
+    // Update MPU6050 attitude for orientation and stability
+    MPU6050_calcAttitude(&hi2c1);
 
-    HAL_Delay(100);
-
-    // Read ultrasonic sensor multiple times to confirm obstacle
-//    const int checkCount = 3;
-//    int obstacleCount = 0;
-//
-//    for (int i = 0; i < checkCount; i++) {
-//        Ultrasonic_Read();
-//        if (ULT_Distance <= 47) {
-//            obstacleCount++;
-//        }
-//        HAL_Delay(30);  // Small delay between checks
-//    }
-    int dist = Get_Average_Distance();
-
-    if (dist < 45) { // At least 2 out of 3 reads must detect obstacle
-        Avoid_Obstacle();
+    // Check for excessive tilt to ensure stability
+    if (fabs(attitude.r) > TILT_THRESHOLD || fabs(attitude.p) > TILT_THRESHOLD) {
+        HAL_UART_Transmit(&huart2, (uint8_t*)"UNSTABLE ORIENTATION DETECTED\r\n", strlen("UNSTABLE ORIENTATION DETECTED\r\n"), HAL_MAX_DELAY);
+        Stepper_Stop(); // Stop to prevent tipping
+        HAL_Delay(1000); // Wait to stabilize
+        is_moving = 0;
+        return;
     }
 
-    HAL_Delay(100);
+    // Check thermal sensor for human detection
+    thm_state = Get_THM_HUM();
+    if (thm_state == THM_HUM_DETECTED) {
+        HAL_UART_Transmit(&huart2, (uint8_t*)"HUMAN DETECTED\r\n", strlen("HUMAN DETECTED\r\n"), HAL_MAX_DELAY);
+        Stepper_Stop(); // Stop the rover
+        sys_auto_state = SEND_INFO; // Transition to SEND_INFO state
+        is_moving = 0;
+        return;
+    }
+
+    // Check for obstacles using ultrasonic sensor
+    if (HAL_GetTick() - last_sensor_check >= SENSOR_CHECK_INTERVAL) {
+        uint16_t dist = Get_Average_Distance();
+        char msg[50];
+        sprintf(msg, "Distance: %u cm\r\n", dist);
+        HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+        if (dist < OBSTACLE_THRESHOLD) {
+            HAL_UART_Transmit(&huart2, (uint8_t*)"OBSTACLE DETECTED\r\n", strlen("OBSTACLE DETECTED\r\n"), HAL_MAX_DELAY);
+            Stepper_Stop(); // Stop immediately
+            Avoid_Obstacle(); // Handle obstacle avoidance
+            is_moving = 0; // Reset movement state
+            return;
+        }
+        last_sensor_check = HAL_GetTick();
+    }
+
+    // Exploration pattern: Move 1 meter, then turn 90 degrees
+    if (!is_moving) {
+        // Start moving forward
+        Stepper_MoveForward(ROVER_SPEED);
+        move_start_time = HAL_GetTick(); // Record start time
+        is_moving = 1;
+        last_sensor_check = HAL_GetTick(); // Initialize sensor check timer
+    } else {
+        // Check if the rover has moved approximately 1 meter
+        if (HAL_GetTick() - move_start_time >= MOVE_TIME_MS) {
+            Stepper_Stop(); // Stop after moving 1 meter
+
+            // Perform a 90-degree turn using MPU6050 yaw
+            float initial_yaw = attitude.y; // Current yaw
+            if (turn_direction == 0) {
+                Stepper_TurnRight(TURN_SPEED);
+                HAL_UART_Transmit(&huart2, (uint8_t*)"TURNING RIGHT\r\n", strlen("TURNING RIGHT\r\n"), HAL_MAX_DELAY);
+            } else {
+                Stepper_TurnLeft(TURN_SPEED);
+                HAL_UART_Transmit(&huart2, (uint8_t*)"TURNING LEFT\r\n", strlen("TURNING LEFT\r\n"), HAL_MAX_DELAY);
+            }
+
+            // Wait until a 90-degree turn is completed or timeout
+            uint32_t turn_start_time = HAL_GetTick();
+            while (fabs(attitude.y - initial_yaw) < 90.0f && (HAL_GetTick() - turn_start_time) < 5000) {
+                MPU6050_calcAttitude(&hi2c1); // Update yaw during turn
+                HAL_Delay(10);
+            }
+            Stepper_Stop(); // Stop turning
+
+            // Alternate turn direction for next segment
+            turn_direction = !turn_direction;
+            is_moving = 0; // Reset for next movement segment
+        }
+    }
+
+    // Periodically log GPS coordinates for mapping (every 5 seconds)
+//    static uint32_t last_gps_log = 0;
+//    if (HAL_GetTick() - last_gps_log >= 5000) {
+//        strcpy(GPS_GoogleMapsLink, GPS_getGoogleMapsLink());
+//        HAL_UART_Transmit(&huart2, (uint8_t*)"GPS: ", 5, HAL_MAX_DELAY);
+//        HAL_UART_Transmit(&huart2, (uint8_t*)GPS_GoogleMapsLink, strlen(GPS_GoogleMapsLink), HAL_MAX_DELAY);
+//        HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, HAL_MAX_DELAY);
+//        last_gps_log = HAL_GetTick();
+//    }
+
+    HAL_Delay(10); // Small delay for system stability
 }
 
 static void Handle_AutoState_SendInfo(void){

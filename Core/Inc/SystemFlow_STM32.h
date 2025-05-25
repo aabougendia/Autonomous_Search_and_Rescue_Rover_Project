@@ -19,6 +19,7 @@
 #include "std_types.h"
 
 #include "CommBus_STM32.h"
+#include "mpu6050.h"
 #include "servo.h"
 #include "GPS_Module.h"
 #include "PIR_sensor.h"
