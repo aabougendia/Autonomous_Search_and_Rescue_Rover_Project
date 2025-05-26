@@ -30,6 +30,23 @@ AutoState sys_auto_state = RECONNING;
 ManualState sys_manual_state = DRV_STOP;
 
 
+#define MANUAL_CONTROL_CHECK() do { \
+    if (Get_Ctrl_State() == STATE_MANUAL) { \
+        Servo_SetAngle(90); \
+        sys_auto_state = RECONNING; \
+        control_state = STATE_MANUAL; \
+        return; \
+    } \
+} while(0)
+
+#define HANDLE_HUMAN_DETECTION() do { \
+    if (thm_state == THM_HUM_DETECTED) { \
+        Stepper_Stop(); \
+        sys_auto_state = SEND_INFO; \
+        return; \
+    } \
+} while(0)
+
 
 /**************   Auto States  ****************/
 static void Handle_AutoState_Reconning(void);
@@ -159,10 +176,7 @@ static void Avoid_Obstacle(void){
 	// Look to the right
 	for(uint8_t ang = 90; ang > 0; ang -= 10){
 
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
+		MANUAL_CONTROL_CHECK();
 
 		Servo_SetAngle(ang);
 		HAL_Delay(50);
@@ -174,10 +188,7 @@ static void Avoid_Obstacle(void){
 	// Look to the left
 	for(uint8_t ang = 0; ang < 180; ang += 10){
 
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
+		MANUAL_CONTROL_CHECK();
 
 		Servo_SetAngle(ang);
 		HAL_Delay(50);
@@ -212,10 +223,7 @@ static void Avoid_Obstacle(void){
 			if(attitude.y >= -1.6){
 				break;
 			}
-			if(Get_Ctrl_State() == STATE_MANUAL){
-				control_state = STATE_MANUAL;
-				return;
-			}
+			MANUAL_CONTROL_CHECK();
 
 		}
 	}
@@ -235,10 +243,7 @@ static void Avoid_Obstacle(void){
 				break;
 			}
 
-			if(Get_Ctrl_State() == STATE_MANUAL){
-				control_state = STATE_MANUAL;
-				return;
-			}
+			MANUAL_CONTROL_CHECK();
 
 		}
 	}
@@ -272,83 +277,47 @@ static void Handle_AutoState_Reconning(void){
 
 	uint32_t start_time = HAL_GetTick();
 	while(HAL_GetTick() - start_time < TIME_BETWEEN_SWEEPS){
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
+		MANUAL_CONTROL_CHECK();
 		thm_state = Get_THM_HUM();
 		HAL_Delay(10);
-		if(thm_state == THM_HUM_DETECTED){
-			Stepper_Stop();
-			Servo_SetAngle(90);
-			sys_auto_state = SEND_INFO;
-			return;
-		}
+		HANDLE_HUMAN_DETECTION();
+
 	    int dist = Get_Average_Distance();
 	    if (dist < 45) {
 	        Avoid_Obstacle();
 	    }
 	}
 
-	if(Get_Ctrl_State() == STATE_MANUAL){
-		control_state = STATE_MANUAL;
-		return;
-	}
+	MANUAL_CONTROL_CHECK();
 
 	Stepper_Stop();
 	// Look to the right
-	for(uint8_t ang = 90; ang > 0; ang -= 10){
+	for(uint8_t ang = 90; ang > 0; ang -= 5){
 
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
+		MANUAL_CONTROL_CHECK();
 
 		Servo_SetAngle(ang);
 		thm_state = Get_THM_HUM();
 		HAL_Delay(50);
-		if(thm_state == THM_HUM_DETECTED){
-			Stepper_Stop();
-
-//			Servo_SetAngle(90);
-			sys_auto_state = SEND_INFO;
-			return;
-		}
+		HANDLE_HUMAN_DETECTION();
 	}
 	// Look to the left
-	for(uint8_t ang = 0; ang < 180; ang += 10){
+	for(uint8_t ang = 0; ang < 180; ang += 5){
 
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
-
+		MANUAL_CONTROL_CHECK();
 		Servo_SetAngle(ang);
 		thm_state = Get_THM_HUM();
 		HAL_Delay(30);
-		if(thm_state == THM_HUM_DETECTED){
-			Stepper_Stop();
-//			Servo_SetAngle(90);
-			sys_auto_state = SEND_INFO;
-			return;
-		}
+		HANDLE_HUMAN_DETECTION();
 	}
-	for(uint8_t ang = 180; ang > 90; ang -= 10){
+	for(uint8_t ang = 180; ang > 90; ang -= 5){
 
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
+		MANUAL_CONTROL_CHECK();
 
 		Servo_SetAngle(ang);
 		thm_state = Get_THM_HUM();
 		HAL_Delay(30);
-		if(thm_state == THM_HUM_DETECTED){
-			Stepper_Stop();
-//			Servo_SetAngle(90);
-			sys_auto_state = SEND_INFO;
-			return;
-		}
+		HANDLE_HUMAN_DETECTION();
 	}
 }
 
@@ -365,10 +334,7 @@ static void Handle_AutoState_SendInfo(void){
 //	HAL_Delay(10000);
 
 	for(int t = 0; t < 100; t++){
-		if(Get_Ctrl_State() == STATE_MANUAL){
-			control_state = STATE_MANUAL;
-			return;
-		}
+		MANUAL_CONTROL_CHECK();
 		HAL_Delay(100);
 	}
 
@@ -384,8 +350,7 @@ static void Handle_AutoState_Idle(void){
 	HAL_Delay(200);
 //	HAL_Delay(8000);
 
-	while(Get_Ctrl_State() != STATE_MANUAL);
-	control_state = STATE_MANUAL;
+	MANUAL_CONTROL_CHECK();
 }
 
 

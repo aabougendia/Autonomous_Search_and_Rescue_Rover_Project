@@ -135,20 +135,54 @@ void handlePress() {
   }
 }
 
-void handleRelease() {
-  if (control_state == STATE_MANUAL) {
-    String dir = server.arg("dir");
+// void handleRelease() {
+//   if (control_state == STATE_MANUAL) {
+//     String dir = server.arg("dir");
 
+//     if (dir == "F" || dir == "B" || dir == "L" || dir == "R") {
+//       man_state = DRV_STOP;
+//       server.send(200, "text/plain", "OFF");
+//     } 
+//     else if (dir == "M") {
+
+//       control_state = STATE_MANUAL;
+//       // digitalWrite(5, HIGH);
+//       Serial.println("MANUAL IN HANDLE -------------------------\n-------------------------\n-------------------------\n-------------------------\n");
+//     }
+//     else if (dir == "A"){
+//       control_state = STATE_AUTO;
+//       // digitalWrite(5, LOW);
+//       }
+//     else {
+//       server.send(400, "text/plain", "Invalid direction");
+//     }
+//   } else {
+//     server.send(403, "text/plain", "Manual control disabled in AUTO mode");
+//   }
+// }
+
+void handleRelease() {
+  String dir = server.arg("dir");
+
+  if (dir == "M") {
+    control_state = STATE_MANUAL;
+    digitalWrite(5, HIGH);
+    server.send(200, "text/plain", "Switched to MANUAL mode");
+  } 
+  else if (dir == "A") {
+    control_state = STATE_AUTO;
+    digitalWrite(5, LOW);
+    server.send(200, "text/plain", "Switched to AUTO mode");
+  } 
+  else if (control_state == STATE_MANUAL) {
     if (dir == "F" || dir == "B" || dir == "L" || dir == "R") {
       man_state = DRV_STOP;
       server.send(200, "text/plain", "OFF");
-    } 
-    else if (dir == "M") control_state = STATE_MANUAL;
-    else if (dir == "A") control_state = STATE_AUTO;
-    else {
+    } else {
       server.send(400, "text/plain", "Invalid direction");
     }
-  } else {
+  } 
+  else {
     server.send(403, "text/plain", "Manual control disabled in AUTO mode");
   }
 }

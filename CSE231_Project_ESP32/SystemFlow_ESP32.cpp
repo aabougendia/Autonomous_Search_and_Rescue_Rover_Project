@@ -18,7 +18,7 @@ float temperatureData[64];
 
 // ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
-ManualState sys_manual_state = DRV_STOP;
+// ManualState sys_manual_state = DRV_STOP;
 
 // GSM function declarations
 static void initGSM();
@@ -62,10 +62,17 @@ void SystemFlow_Init() {
 void SystemFlow_Run() {
     Serial.println("start run");
 
-    Set_Ctrl_State(control_state);
+    if(control_state == STATE_AUTO)
+        Serial.println("________ AUTO MODE _______");
+    else 
+        Serial.println("________ MANUAL MODE _______");
+
 
     server.handleClient();
+    Set_Ctrl_State(control_state);
+
     if (control_state == STATE_AUTO) {
+        Serial.println("________  AUTO MODE 2222_______");
         sys_auto_state = Get_Auto_State();
         switch (sys_auto_state) {
             case RECONNING:
@@ -81,7 +88,7 @@ void SystemFlow_Run() {
         delay(100);
     }
     else if (control_state == STATE_MANUAL) {
-        Serial.println("start manual");
+        Serial.println("________ MANUAL MODE 2222_______");
         // server.handleClient();
 
         switch (man_state) {
