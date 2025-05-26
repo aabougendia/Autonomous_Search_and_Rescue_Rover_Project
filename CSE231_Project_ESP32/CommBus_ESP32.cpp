@@ -22,6 +22,15 @@ void CommBus_Init() {
     pinMode(COMM_MAN0_AUTO_ACK_PIN, OUTPUT);
     pinMode(COMM_MAN1_PIN, OUTPUT);
     pinMode(COMM_MAN2_PIN, OUTPUT);
+
+
+    digitalWrite(COMM_AUTOMAN_STATE_PIN, HIGH);
+    digitalWrite(COMM_MAN0_AUTO_ACK_PIN, LOW);
+    digitalWrite(COMM_MAN1_PIN, LOW);
+    digitalWrite(COMM_MAN2_PIN, LOW);
+
+    digitalWrite(COMM_HUM_FLAG_PIN, LOW);
+    
 }
 
 void Set_Man_Stat(ManualState state) {

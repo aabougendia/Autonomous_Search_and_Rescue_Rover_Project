@@ -18,7 +18,6 @@ float temperatureData[64];
 
 // ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
-
 ManualState sys_manual_state = DRV_STOP;
 
 // GSM function declarations

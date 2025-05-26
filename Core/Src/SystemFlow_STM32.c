@@ -79,8 +79,8 @@ void SystemFlow_Run(){
     }
     else if(control_state == STATE_MANUAL){
 
-    	RGB_LED_vON(0, 0, 1);
-    	BUZZER_vOFF();
+//    	RGB_LED_vON(0, 0, 1);
+//    	BUZZER_vOFF();
 
     	HAL_UART_Transmit(&huart2, (uint8_t*)"start manual\r\n", strlen("start manual\r\n"), HAL_MAX_DELAY);
     	sys_manual_state = Get_Man_Stat();
@@ -158,6 +158,12 @@ static void Avoid_Obstacle(void){
 	Stepper_Stop();
 	// Look to the right
 	for(uint8_t ang = 90; ang > 0; ang -= 10){
+
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
+
 		Servo_SetAngle(ang);
 		HAL_Delay(50);
 	}
@@ -167,6 +173,12 @@ static void Avoid_Obstacle(void){
 
 	// Look to the left
 	for(uint8_t ang = 0; ang < 180; ang += 10){
+
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
+
 		Servo_SetAngle(ang);
 		HAL_Delay(50);
 	}
@@ -177,6 +189,7 @@ static void Avoid_Obstacle(void){
 
 	Servo_SetAngle(90);
 	HAL_Delay(200);
+
 	// Backing a bit to be able to rotate
 	Stepper_MoveBackward(200);
 	HAL_Delay(1500);
@@ -186,17 +199,24 @@ static void Avoid_Obstacle(void){
 	if(Right_Distance >= Left_Distance){
 		Stepper_TurnRight(400);
 	    MPU6050_calibrateGyro(&hi2c1, 1000);
+
 		while(1){
 			trigger_Gyro();
-			  char buffer[50];  // Make sure the buffer is large enough
 
-			  sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
-			  HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+			char buffer[50];  // Make sure the buffer is large enough
+
+			sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
+			HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
 			  // Convert float to string
-			  sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
+			sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
 			if(attitude.y >= -1.6){
 				break;
 			}
+			if(Get_Ctrl_State() == STATE_MANUAL){
+				control_state = STATE_MANUAL;
+				return;
+			}
+
 		}
 	}
 	else {
@@ -214,6 +234,12 @@ static void Avoid_Obstacle(void){
 			if(attitude.y <= 1.6){
 				break;
 			}
+
+			if(Get_Ctrl_State() == STATE_MANUAL){
+				control_state = STATE_MANUAL;
+				return;
+			}
+
 		}
 	}
 
@@ -246,6 +272,10 @@ static void Handle_AutoState_Reconning(void){
 
 	uint32_t start_time = HAL_GetTick();
 	while(HAL_GetTick() - start_time < TIME_BETWEEN_SWEEPS){
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
 		thm_state = Get_THM_HUM();
 		HAL_Delay(10);
 		if(thm_state == THM_HUM_DETECTED){
@@ -255,29 +285,47 @@ static void Handle_AutoState_Reconning(void){
 			return;
 		}
 	    int dist = Get_Average_Distance();
-	    if (dist < 50) {
+	    if (dist < 45) {
 	        Avoid_Obstacle();
 	    }
 	}
 
+	if(Get_Ctrl_State() == STATE_MANUAL){
+		control_state = STATE_MANUAL;
+		return;
+	}
+
 	Stepper_Stop();
 	// Look to the right
-	for(uint8_t ang = 90; ang > 0; ang -= 5){
+	for(uint8_t ang = 90; ang > 0; ang -= 10){
+
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
+
 		Servo_SetAngle(ang);
 		thm_state = Get_THM_HUM();
 		HAL_Delay(50);
 		if(thm_state == THM_HUM_DETECTED){
 			Stepper_Stop();
+
 //			Servo_SetAngle(90);
 			sys_auto_state = SEND_INFO;
 			return;
 		}
 	}
 	// Look to the left
-	for(uint8_t ang = 0; ang < 180; ang += 5){
+	for(uint8_t ang = 0; ang < 180; ang += 10){
+
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
+
 		Servo_SetAngle(ang);
 		thm_state = Get_THM_HUM();
-		HAL_Delay(50);
+		HAL_Delay(30);
 		if(thm_state == THM_HUM_DETECTED){
 			Stepper_Stop();
 //			Servo_SetAngle(90);
@@ -285,10 +333,16 @@ static void Handle_AutoState_Reconning(void){
 			return;
 		}
 	}
-	for(uint8_t ang = 180; ang > 90; ang -= 5){
+	for(uint8_t ang = 180; ang > 90; ang -= 10){
+
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
+
 		Servo_SetAngle(ang);
 		thm_state = Get_THM_HUM();
-		HAL_Delay(50);
+		HAL_Delay(30);
 		if(thm_state == THM_HUM_DETECTED){
 			Stepper_Stop();
 //			Servo_SetAngle(90);
@@ -308,7 +362,15 @@ static void Handle_AutoState_SendInfo(void){
 	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
 
 	Send_GPSLink(GPS_GoogleMapsLink);
-	HAL_Delay(10000);
+//	HAL_Delay(10000);
+
+	for(int t = 0; t < 100; t++){
+		if(Get_Ctrl_State() == STATE_MANUAL){
+			control_state = STATE_MANUAL;
+			return;
+		}
+		HAL_Delay(100);
+	}
 
 	sys_auto_state = IDLE;
 
@@ -319,7 +381,8 @@ static void Handle_AutoState_Idle(void){
 
 	Stepper_Stop();
 
-	HAL_Delay(8000);
+	HAL_Delay(200);
+//	HAL_Delay(8000);
 
 	while(Get_Ctrl_State() != STATE_MANUAL);
 	control_state = STATE_MANUAL;
