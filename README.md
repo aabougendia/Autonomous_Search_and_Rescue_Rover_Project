@@ -78,7 +78,7 @@ This project is a fully autonomous search and rescue system built on a two-micro
 2. Download the .apk app named Rescue_Rover_Controller
 3. Connect to the ESP32's Wi-Fi (SSID: `ESP32_Control`, password: `12345678`) for manual mode.
 4. Use the web interface to control the Rover and switch between manual and autonomous control.
-5. Monitor status via LEDs and console outputs.
+5. Monitor status via LED and buzzer.
 
 ## License
 
