@@ -33,7 +33,7 @@ void SystemFlow_Init() {
     pinMode(LED_BUILTIN, OUTPUT);
     CommBus_Init();
     PIR_Init();
-    Serial2.begin(115200, SERIAL_8N1, 16, 17); // GPS on UART2
+    Serial2.begin(115200, SERIAL_8N1, 16, 17); // CommBus on UART2
     Serial.begin(115200); // Debug
     Serial1.begin(9600, SERIAL_8N1, 12, 13); // GSM on UART1
     Drive_Init();
