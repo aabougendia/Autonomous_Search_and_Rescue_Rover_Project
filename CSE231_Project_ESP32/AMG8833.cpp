@@ -31,11 +31,38 @@ float AMG8833::getMaxTemperature() {
     return maxTemp;
 }
 
+// float AMG8833::getAverageTemperature() {
+//     float sum = 0.0;
+//     for (int i = 0; i < 64; i++) sum += pixels[i];
+//     return sum / 64.0;
+// }
+
 float AMG8833::getAverageTemperature() {
     float sum = 0.0;
-    for (int i = 0; i < 64; i++) sum += pixels[i];
-    return sum / 64.0;
+    int count = 0;
+
+    // Top row
+    for (int i = 0; i < 8; i++) {
+        sum += pixels[i];
+        count++;
+    }
+
+    // Bottom row
+    for (int i = 56; i < 64; i++) {
+        sum += pixels[i];
+        count++;
+    }
+
+    // Left and right columns (excluding corners to avoid double-counting)
+    for (int row = 1; row < 7; row++) {
+        sum += pixels[row * 8];     // Left
+        sum += pixels[row * 8 + 7]; // Right
+        count += 2;
+    }
+
+    return sum / count; // 28 pixels total
 }
+
 
 float AMG8833::computeAdaptiveDelta() {
     float mean = getAverageTemperature();

@@ -1,10 +1,3 @@
-/*
- * GPS_Module.h
- *
- *  Created on: Apr 25, 2025
- *      Author: Asteroid
- */
-
 #ifndef INC_GPS_MODULE_H_
 #define INC_GPS_MODULE_H_
 

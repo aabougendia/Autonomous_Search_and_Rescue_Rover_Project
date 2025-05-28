@@ -1,6 +1,3 @@
-
-//#include "std_types.h"
-//#include "main.h"
 #include "ultrasonic.h"
 
 

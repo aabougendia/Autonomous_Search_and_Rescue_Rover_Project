@@ -23,16 +23,6 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-
-//ControlState ctrl_stat = STATE_AUTO;
-//ManualState manual_state;
-//AutoState auto_stat = IDLE;
-
-//char GPS_outputBuffer[150];
-//PIR_OUT pir_state = PIR_NO_MOTION;
-//THM_State thm_hum_state = THM_HUM_NOT_DETECTED;
-
-
 ManualState Get_Man_Stat() {
 
     uint8_t b0 = HAL_GPIO_ReadPin(STATE_PORT, MAN0_AUTO_ACK_Pin);
@@ -49,12 +39,6 @@ ManualState Get_Man_Stat() {
 
 THM_State Get_THM_HUM() {
     return HAL_GPIO_ReadPin(FLAG_PORT, HUM_FLAG_Pin);
-}
-
-
-
-void Set_PIR(PIR_OUT state) {
-    HAL_GPIO_WritePin(FLAG_PORT, MOTION_FLAG_Pin, state);
 }
 
 

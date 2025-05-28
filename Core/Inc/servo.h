@@ -1,6 +1,3 @@
-//#include <stdint.h>
-//#include "main.h"
-
 #define SERVO_TIMER &htim2
 #define SERVO_TIMER_PWM_CH TIM_CHANNEL_2
 

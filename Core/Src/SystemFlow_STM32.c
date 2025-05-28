@@ -13,15 +13,7 @@ extern UART_HandleTypeDef huart3;
 
 #define ROVER_SPEED 400
 
-#define MOVE_DISTANCE 1000 // Distance to move in mm (1 meter)
-#define TURN_SPEED 400    // Speed for turning
-#define OBSTACLE_THRESHOLD 45 // Distance in cm for obstacle detection
-#define TILT_THRESHOLD 15.0f  // Max allowable tilt in degrees
-#define MOVE_TIME_MS 5000     // Approximate time to move 1 meter at ROVER_SPEED (adjust based on testing)
-#define SENSOR_CHECK_INTERVAL 100 // Check sensors every 100 ms during movement
-
 char GPS_GoogleMapsLink[150];
-PIR_OUT pir_state;
 THM_State thm_state;
 
 
@@ -42,6 +34,7 @@ ManualState sys_manual_state = DRV_STOP;
 #define HANDLE_HUMAN_DETECTION() do { \
     if (thm_state == THM_HUM_DETECTED) { \
         Stepper_Stop(); \
+        thm_state = THM_HUM_NOT_DETECTED;\
         sys_auto_state = SEND_INFO; \
         return; \
     } \
@@ -60,10 +53,6 @@ static void Handle_ManualState_DRV_BWD(void);
 static void Handle_ManualState_DRV_RIGHT(void);
 static void Handle_ManualState_DRV_LEFT(void);
 
-static void Handle_ManualState_CAM_STOP(void);
-static void Handle_ManualState_CAM_RIGHT(void);
-static void Handle_ManualState_CAM_LEFT(void);
-
 void SystemFlow_Init(){
 	Stepper_Init();
     Servo_Init();
@@ -74,11 +63,9 @@ void SystemFlow_Init(){
     MPU6050_init(&hi2c1, AD0_LOW, AFSR_4G, GFSR_500DPS, 0.98f, 0.004);
     MPU6050_calibrateGyro(&hi2c1, 1000);
 
-//    CommBus_Init(&huart3);
 }
 void SystemFlow_Run(){
 
-	HAL_UART_Transmit(&huart2, (uint8_t*)"start run\r\n", strlen("start run\r\n"), HAL_MAX_DELAY);
 	control_state = Get_Ctrl_State();
     if(control_state == STATE_AUTO) {
         switch (sys_auto_state) {
@@ -96,19 +83,13 @@ void SystemFlow_Run(){
     }
     else if(control_state == STATE_MANUAL){
 
-//    	RGB_LED_vON(0, 0, 1);
-//    	BUZZER_vOFF();
-
-    	HAL_UART_Transmit(&huart2, (uint8_t*)"start manual\r\n", strlen("start manual\r\n"), HAL_MAX_DELAY);
     	sys_manual_state = Get_Man_Stat();
 
         switch (sys_manual_state) {
             case DRV_STOP:
-            	HAL_UART_Transmit(&huart2, (uint8_t*)"stop\r\n", strlen("stop\r\n"), HAL_MAX_DELAY);
                 Handle_ManualState_DRV_STOP();
                 break;
             case DRV_FWD:
-            	HAL_UART_Transmit(&huart2, (uint8_t*)"forward\r\n", strlen("forward\r\n"), HAL_MAX_DELAY);
                 Handle_ManualState_DRV_FWD();
                 break;
             case DRV_BWD:
@@ -120,16 +101,6 @@ void SystemFlow_Run(){
             case DRV_LEFT:
                 Handle_ManualState_DRV_LEFT();
                 break;
-            case CAM_STOP:
-                Handle_ManualState_CAM_STOP();
-                break;
-            case CAM_RIGHT:
-                Handle_ManualState_CAM_RIGHT();
-                break;
-            case CAM_LEFT:
-                Handle_ManualState_CAM_LEFT();
-                break;
-
         }
         HAL_Delay(20);
     }
@@ -161,10 +132,6 @@ uint16_t Get_Average_Distance(void) {
         HAL_Delay(100);
     }
     return total / 3;
-}
-
-uint8_t Get_Consistent_THM(void){
-
 }
 
 static void Avoid_Obstacle(void){
@@ -203,52 +170,18 @@ static void Avoid_Obstacle(void){
 
 	// Backing a bit to be able to rotate
 	Stepper_MoveBackward(200);
-	HAL_Delay(1500);
+	HAL_Delay(1000);
 	Stepper_Stop();
 
 	// Deciding to turn right or left
 	if(Right_Distance >= Left_Distance){
 		Stepper_TurnRight(400);
-	    MPU6050_calibrateGyro(&hi2c1, 1000);
-
-		while(1){
-			trigger_Gyro();
-
-			char buffer[50];  // Make sure the buffer is large enough
-
-			sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
-			HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-			  // Convert float to string
-			sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
-			if(attitude.y >= -1.6){
-				break;
-			}
-			MANUAL_CONTROL_CHECK();
-
-		}
 	}
 	else {
 		Stepper_TurnLeft(400);
-
-	    MPU6050_calibrateGyro(&hi2c1, 1000);
-		while(1){
-			trigger_Gyro();
-			char buffer[50];  // Make sure the buffer is large enough
-
-			 sprintf(buffer,"gz raw: %d, gz deg/s: %.2f, yaw: %.2f\r\n", rawData.gz, sensorData.gz, attitude.y);
-			 HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-			  // Convert float to string
-			sprintf(buffer, "Value: %.2f\r\n", attitude.y);  // Format with 2 decimal places
-			if(attitude.y <= 1.6){
-				break;
-			}
-
-			MANUAL_CONTROL_CHECK();
-
-		}
 	}
 
-//	HAL_Delay(3000);
+	HAL_Delay(3000);
 	Stepper_Stop();
 
 	HAL_Delay(300);
@@ -264,15 +197,6 @@ static void Avoid_Obstacle(void){
 
 
 static void Handle_AutoState_Reconning(void){
-
-	LOG_UART("AUTO STATE 0: RECONNING");
-//
-//	Ultrasonic_Read();
-//	char msg[50];
-//	sprintf(msg, "Distance: %u cm\r\n", ULT_Distance);
-//	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-//	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
-//
 	Stepper_MoveForward(ROVER_SPEED);
 
 	uint32_t start_time = HAL_GetTick();
@@ -322,8 +246,6 @@ static void Handle_AutoState_Reconning(void){
 }
 
 static void Handle_AutoState_SendInfo(void){
-	LOG_UART("AUTO STATE 1: SEND INFO");
-
 	Stepper_Stop();
 
 	strcpy(GPS_GoogleMapsLink, GPS_getGoogleMapsLink());
@@ -331,7 +253,6 @@ static void Handle_AutoState_SendInfo(void){
 	HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", strlen("\r\n"), HAL_MAX_DELAY);
 
 	Send_GPSLink(GPS_GoogleMapsLink);
-//	HAL_Delay(10000);
 
 	for(int t = 0; t < 100; t++){
 		MANUAL_CONTROL_CHECK();
@@ -343,12 +264,10 @@ static void Handle_AutoState_SendInfo(void){
 }
 
 static void Handle_AutoState_Idle(void){
-	LOG_UART("AUTO STATE 2: IDLE");
 
 	Stepper_Stop();
 
 	HAL_Delay(200);
-//	HAL_Delay(8000);
 
 	MANUAL_CONTROL_CHECK();
 }
@@ -356,13 +275,10 @@ static void Handle_AutoState_Idle(void){
 
 /**************   Manual States  ****************/
 
-
-
 static void Handle_ManualState_DRV_STOP(void){
 	Stepper_Stop();
 }
 static void Handle_ManualState_DRV_FWD(void){
-	HAL_UART_Transmit(&huart2, (uint8_t*)"stepper fwd\r\n", strlen("stepper fwd\r\n"), HAL_MAX_DELAY);
 	Stepper_MoveForward(ROVER_SPEED);
 }
 static void Handle_ManualState_DRV_BWD(void){
@@ -373,14 +289,4 @@ static void Handle_ManualState_DRV_RIGHT(void){
 }
 static void Handle_ManualState_DRV_LEFT(void){
 	Stepper_TurnLeft(ROVER_SPEED);
-}
-
-static void Handle_ManualState_CAM_STOP(void){
-
-}
-static void Handle_ManualState_CAM_RIGHT(void){
-
-}
-static void Handle_ManualState_CAM_LEFT(void){
-
 }

@@ -14,11 +14,7 @@ uint8_t pir_state = PIR_NO_MOTION;
 AMG8833 thermalSensor;
 float temperatureData[64];
 
-// WebServer server(80);
-
-// ControlState control_state = STATE_AUTO;
 AutoState sys_auto_state = RECONNING;
-// ManualState sys_manual_state = DRV_STOP;
 
 // GSM function declarations
 static void initGSM();
@@ -32,14 +28,6 @@ static String extractCoordinates(const String& url); // New helper function
 static void Handle_AutoState_Reconning();
 static void Handle_AutoState_SendInfo();
 static void Handle_AutoState_Idle();
-static void Handle_ManualState_DRV_STOP();
-static void Handle_ManualState_DRV_FWD();
-static void Handle_ManualState_DRV_BWD();
-static void Handle_ManualState_DRV_RIGHT();
-static void Handle_ManualState_DRV_LEFT();
-static void Handle_ManualState_CAM_STOP();
-static void Handle_ManualState_CAM_RIGHT();
-static void Handle_ManualState_CAM_LEFT();
 
 void SystemFlow_Init() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -60,19 +48,11 @@ void SystemFlow_Init() {
 }
 
 void SystemFlow_Run() {
-    Serial.println("start run");
-
-    if(control_state == STATE_AUTO)
-        Serial.println("________ AUTO MODE _______");
-    else 
-        Serial.println("________ MANUAL MODE _______");
-
-
     server.handleClient();
     Set_Ctrl_State(control_state);
 
     if (control_state == STATE_AUTO) {
-        Serial.println("________  AUTO MODE 2222_______");
+
         sys_auto_state = Get_Auto_State();
         switch (sys_auto_state) {
             case RECONNING:
@@ -88,33 +68,17 @@ void SystemFlow_Run() {
         delay(100);
     }
     else if (control_state == STATE_MANUAL) {
-        Serial.println("________ MANUAL MODE 2222_______");
-        // server.handleClient();
 
         switch (man_state) {
             case DRV_STOP:
-                Serial.println("DRV_STOP");
                 break;
             case DRV_FWD:
-                Serial.println("DRV_FWD");
                 break;
             case DRV_BWD:
-                Serial.println("DRV_BWD");
                 break;
             case DRV_RIGHT:
-                Serial.println("DRV_RIGHT");
                 break;
             case DRV_LEFT:
-                Serial.println("DRV_LEFT");
-                break;
-            case CAM_STOP:
-                Serial.println("CAM_STOP");
-                break;
-            case CAM_RIGHT:
-                Serial.println("CAM_RIGHT");
-                break;
-            case CAM_LEFT:
-                Serial.println("CAM_LEFT");
                 break;
             default:
                 Serial.println("UNKNOWN");
@@ -125,19 +89,15 @@ void SystemFlow_Run() {
 }
 
 static void Handle_AutoState_Reconning() {
-    Serial.println("AUTO 0 : RECONNING");
-
     if (thermalSensor.detectHumanRelative()) {
-        Serial.println("THM:1\n");
         Set_THM_HUM(THM_HUM_DETECTED);
     } else {
-        Serial.println("THM:0\n");
         Set_THM_HUM(THM_HUM_NOT_DETECTED);
     }
 }
 
 static void Handle_AutoState_SendInfo() {
-    Serial.println("AUTO 1 : SEND INFO");
+    Set_THM_HUM(THM_HUM_NOT_DETECTED);
 
     String ReceivedGoogleMapsLink = Get_GPSLink();
     if (ReceivedGoogleMapsLink != "") {
@@ -189,8 +149,7 @@ static void Handle_AutoState_SendInfo() {
 }
 
 static void Handle_AutoState_Idle() {
-    Serial.println("AUTO 2 : IDLE");
-    Clear_ESP_ACK();
+
 }
 
 static void initGSM() {
@@ -317,12 +276,3 @@ static String extractCoordinates(const String& url) {
     String longitude = url.substring(endIndex + 1);
     return latitude + "," + longitude;
 }
-
-static void Handle_ManualState_DRV_STOP() {}
-static void Handle_ManualState_DRV_FWD() {}
-static void Handle_ManualState_DRV_BWD() {}
-static void Handle_ManualState_DRV_RIGHT() {}
-static void Handle_ManualState_DRV_LEFT() {}
-static void Handle_ManualState_CAM_STOP() {}
-static void Handle_ManualState_CAM_RIGHT() {}
-static void Handle_ManualState_CAM_LEFT() {}

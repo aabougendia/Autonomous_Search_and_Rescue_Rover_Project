@@ -1,17 +1,6 @@
 #include "esp32-hal-gpio.h"
 #include "CommBus_ESP32.h"
 
-// Global variables (definition)
-// ManualState Manual_state = DRV_STOP;
-// THM_State thm_hum_state = THM_HUM_NOT_DETECTED;
-// PIR_OUT pir_state = PIR_NO_MOTION;
-// AutoState auto_stat = IDLE;
-// ControlState ctrl_stat = STATE_MANUAL;
-
-
-
-
-
 
 void CommBus_Init() {
     pinMode(COMM_AUTOMAN_STATE_PIN, OUTPUT);
@@ -60,21 +49,6 @@ void Set_Man_Stat(ManualState state) {
             digitalWrite(COMM_MAN1_PIN, LOW);
             digitalWrite(COMM_MAN2_PIN, HIGH);
             break;
-        case CAM_STOP:
-            digitalWrite(COMM_MAN0_AUTO_ACK_PIN, HIGH);
-            digitalWrite(COMM_MAN1_PIN, LOW);
-            digitalWrite(COMM_MAN2_PIN, HIGH);
-            break;
-        case CAM_RIGHT:
-            digitalWrite(COMM_MAN0_AUTO_ACK_PIN, LOW);
-            digitalWrite(COMM_MAN1_PIN, HIGH);
-            digitalWrite(COMM_MAN2_PIN, HIGH);
-            break;
-        case CAM_LEFT:
-            digitalWrite(COMM_MAN0_AUTO_ACK_PIN, HIGH);
-            digitalWrite(COMM_MAN1_PIN, HIGH);
-            digitalWrite(COMM_MAN2_PIN, HIGH);
-            break;
         default:
             digitalWrite(COMM_MAN0_AUTO_ACK_PIN, LOW);
             digitalWrite(COMM_MAN1_PIN, LOW);
@@ -90,12 +64,6 @@ void Set_THM_HUM(THM_State state) {
 void Set_Ctrl_State(ControlState state) {
     digitalWrite(COMM_AUTOMAN_STATE_PIN, state == STATE_MANUAL ? HIGH : LOW);
 }
-
-// PIR_OUT Get_PIR() {
-//     int reading = digitalRead(COMM_MOTION_FLAG_PIN);
-//     pir_state = (reading == HIGH) ? PIR_MOTION_DETECTED : PIR_NO_MOTION;
-//     return pir_state;
-// }
 
 AutoState Get_Auto_State() {
     int auto0 = digitalRead(COMM_AUTO0_PIN);

@@ -1,10 +1,3 @@
-/*
- * SystemFlow_STM32.h
- *
- *  Created on: May 23, 2025
- *      Author: Asteroid
- */
-
 #ifndef INC_SYSTEMFLOW_STM32_H_
 #define INC_SYSTEMFLOW_STM32_H_
 
@@ -22,7 +15,6 @@
 #include "mpu6050.h"
 #include "servo.h"
 #include "GPS_Module.h"
-#include "PIR_sensor.h"
 #include "ultrasonic.h"
 #include "motor.h"
 #include "alerts.h"
