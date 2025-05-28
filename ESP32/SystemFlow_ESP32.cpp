@@ -68,22 +68,6 @@ void SystemFlow_Run() {
         delay(100);
     }
     else if (control_state == STATE_MANUAL) {
-
-        switch (man_state) {
-            case DRV_STOP:
-                break;
-            case DRV_FWD:
-                break;
-            case DRV_BWD:
-                break;
-            case DRV_RIGHT:
-                break;
-            case DRV_LEFT:
-                break;
-            default:
-                Serial.println("UNKNOWN");
-                break;
-        }
         Set_Manual_State(man_state);
     }
 }
