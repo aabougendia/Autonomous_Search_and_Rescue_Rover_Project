@@ -53,7 +53,7 @@ This project is a fully autonomous search and rescue system built on a two-micro
 - **Power Supply**:
   - 3x 18650 lithium-ion cells (12.5V total)
   - Buck converters (for 5V and 4V regulated outputs)
-  - AMS1117 LDO (3.3V for thermal and IMU)
+  - AMS1117 LDO (3.3V for thermal camera and IMU)
 
 - **User Interface and Feedback**:
   - RGB LED and buzzer (state indication)
